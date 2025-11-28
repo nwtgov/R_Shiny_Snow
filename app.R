@@ -8,37 +8,25 @@ library(sf)
 library(utils)
 library(ggplot2)
 
+source("R/content_functions.R")
+source("R/welcomeModal.R")
 source("R/SWE_summary_shiny.R")
 source("R/snowModule.R")
 source("R/downloadModule.R")
+source("R/faqModule.R")
 
-# Add timeout of 5 min to reduce usage time (default is 15 min)
-shinyOptions(timeout = 300) # note timeout is in seconds
-
-# Language selection popup
-languageUI <- modalDialog(
-  div(
-    style = "text-align: center; padding: 20px;",
-    actionButton("select_english", "English",
-                 style = "font-size: 18px; padding: 15px 30px; margin: 10px; background-color: #0066cc; color: white; border: none; border-radius: 5px;"),
-    actionButton("select_french", "Français",
-                 style = "font-size: 18px; padding: 15px 30px; margin: 10px; background-color: #0066cc; color: white; border: none; border-radius: 5px;")
-  ),
-  footer = NULL,
-  easyClose = FALSE,
-  size = "s"
-)
+# timeout to reduce usage until subscription upgraded
+shinyOptions(timeout = 300) # in sec
 
 # Main UI
 mainUI <- fluidPage(
   useShinyjs(),
   use_waiter(),
-  # CSS styles
   tags$head(
     tags$style(HTML("
           body::after {
             content: '';
-            position: fixed;
+            position: absolute;
             top: 55px;
             left: 0;
             right: 0;
@@ -50,6 +38,13 @@ mainUI <- fluidPage(
           .modal {
             z-index: 9999 !important;
           }
+          .welcome-modal {
+            width: 90% !important;      /* ~90% screen width */
+            height: 90% !important;
+          }
+          .welcome-modal .modal-body {
+            overflow-y: auto;           /* scroll content if long */
+          }
           .navbar {
             margin-bottom: 0;
             border-radius: 0;
@@ -58,6 +53,10 @@ mainUI <- fluidPage(
             padding: 0;
             border-bottom: none;
             width: 100% !important;
+            position: static !important;
+          }
+          .navbar-header {
+            position: static !important;
           }
           .navbar-brand {
             color: #000000 !important;
@@ -83,9 +82,7 @@ mainUI <- fluidPage(
             align-items:center !important;
             margin: 0;
             border: none;
-            position: absolute;
-            right: 40px;
-            top: 0;
+            position: static !important;
           }
           .navbar-nav > li > a {
             color: #ffffff !important;
@@ -138,9 +135,9 @@ mainUI <- fluidPage(
             border-top: 3px solid #2699D5;
             display: flex;
             align-items: center;
-            justify-content: center;  /* Center the text */
+            justify-content: center;
             z-index: 10001;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);  /* Fixed typo: rbga -> rgba */
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
           }
           .contact-text{
           color: #0066cc;
@@ -148,13 +145,62 @@ mainUI <- fluidPage(
           font-weight: bold;
           text-align: center;
           }
+          .language-toggle-container {
+            position: absolute;
+            right: 20px;
+            top: 0;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+          }
+          .language-toggle-link {
+            background: none !important;
+            border: none !important;
+            color: #333333 !important;
+            font-size: 14px !important;
+            padding: 8px 12px !important;
+            cursor: pointer;
+            box-shadow: none !important;
+          }
+          .language-toggle-link:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+          }
+          .info-panel {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            max-width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 2;
+            font-size: 12px;
+            display: none;
+            position: relative;
+          }
+          .close-info-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            z-index: 10;
+            padding: 0 8px;
+            line-height: 1;
+          }
+          .close-info-btn:hover {
+            color: #000;
+            font-weight: bold;
+          }
           "))
   ),
-
-  # Use uiOutput for the entire navbarPage
   uiOutput("dynamic_navbar"),
   uiOutput("dynamic_contact_bar")
-
 )
 
 # Main UI structure
@@ -166,43 +212,126 @@ ui <- fluidPage(
 # Basic server structure
 server <- function(input, output, session) {
   w <- Waiter$new()
-
-  # Pre-load data while user selects language
   preloaded_data <- reactiveVal(NULL)
 
   observe({
-    # Load data in background while user selects language
     isolate({
       md_3 <- readRDS("data/md_3.rds")
-      preloaded_data(list(md_3 = md_3))
+      md_3 <- update_site_names(md_3)
+      mackenzie_basin <- readRDS("data/MackenzieRiverBasin_FDA.rds")
+      slave <- readRDS("data/07NC005_DrainageBasin_BassinDeDrainage.rds")
+      peel <- readRDS("data/10MC002_DrainageBasin_BassinDeDrainage.rds")
+      hay <- readRDS("data/07OB001_DrainageBasin_BassinDeDrainage.rds")
+      liard <- readRDS("data/10ED002_DrainageBasin_BassinDeDrainage.rds")
+
+      preloaded_data(list(
+        md_3 = md_3,
+        mackenzie_basin = mackenzie_basin,
+        slave = slave,
+        peel = peel,
+        hay = hay,
+        liard = liard
+        ))
     })
+    w$hide()
   })
 
-  # Add reactive vals to track first visits and current tab
+  # reactive vals to track first visits and current tab
   first_visits <- reactiveValues(
     snow = TRUE
   )
 
-  # Create a reactive value to track language selection
-  language <- reactiveVal(NULL)
+  language <- reactiveVal("en") # set default lang
+  show_welcome_trigger <- reactiveVal(FALSE) # reactive modal trigger
+  previous_tab <- reactiveVal(NULL) # travk prev tab ( for "About" button)
 
-  # Show language selection immediately when app starts
+  setup_welcome_modal_handlers(session, language, show_welcome_trigger) # lang toggle, keep info button, etc
+
   observe({
-    req(is.null(language()))
-    w$hide()  # Hide waiter first
-    showModal(languageUI)  # Then show modal
+    # Store current tab as previous before it potentially changes
+    if(!is.null(input$navbar) &&
+       input$navbar != "About" &&
+       input$navbar != "À propos") {
+      previous_tab(input$navbar)
+    }
   })
 
-  # Handle language button clicks
-  observeEvent(input$select_english, {
-    language("en")
-    removeModal()
-  })
+  # Handle About tab click - show welcome modal and stay on current tab
+  observeEvent(input$navbar, {
+    # Check if About tab was clicked (in either language)
+    if(input$navbar == "About" || input$navbar == "À propos") {
+      show_welcome_trigger(TRUE)
+      # Switch back to previous tab (or default)
+      target_tab <- if(!is.null(isolate(previous_tab()))) {
+        isolate(previous_tab())
+      } else {
+        if(language() == "fr") "Données nivométriques" else "Snow Data"
+      }
+      # Switch back immediately
+      updateNavbarPage(
+        session,
+        "navbar",
+        selected = target_tab
+      )
+    }
+  }, ignoreInit = TRUE)
+  # language toggle and tab preservation
+  desired_tab <- reactiveVal(NULL)
 
-  observeEvent(input$select_french, {
-    language("fr")
-    removeModal()
-  })
+  # Language toggle handler - preserve current tab (for navbar language button)
+  observeEvent(input$toggle_language, {
+    # Save current tab before language change
+    current_tab <- input$navbar
+    current_lang <- language()
+    if(current_lang == "en") {
+      language("fr")
+      tab_map <- list(
+        "Snow Data" = "Données nivométriques",
+        "Download Data" = "Télécharger",
+        "FAQ" = "FAQ",
+        "About" = "À propos"
+      )
+    } else {
+      language("en")
+      tab_map <- list(
+        "Données nivométriques" = "Snow Data",
+        "Télécharger" = "Download Data",
+        "FAQ" = "FAQ",
+        "À propos" = "About"
+      )
+    }
+
+    # Store desired tab name for after navbar re-renders
+    if(!is.null(current_tab) && current_tab %in% names(tab_map)) {
+      desired_tab(tab_map[[current_tab]])
+    } else {
+      desired_tab(NULL)
+    }
+  }, ignoreInit = TRUE)
+
+  # Restore tab after navbar re-renders
+  observeEvent(language(), {
+    if(!is.null(desired_tab())) {
+      # set the selected tab immediately
+      updateNavbarPage(
+        session,
+        "navbar",
+        selected = desired_tab()
+      )
+      # JavaScript backup with longer delay
+      shinyjs::runjs(sprintf("
+      setTimeout(function() {
+        var tabLink = $('#navbar').find('a[data-value=\"%s\"]');
+        if (tabLink.length > 0) {
+          tabLink.click();
+        }
+      }, 300);
+    ", desired_tab()))
+      # Clear desired_tab after use
+      desired_tab(NULL)
+    }
+    # If language change came from modal let navbar re-render naturally
+  }, ignoreInit = TRUE)
 
   # RENDER THE ENTIRE NAVBAR DYNAMICALLY
   output$dynamic_navbar <- renderUI({
@@ -223,6 +352,20 @@ server <- function(input, output, session) {
         )
       ),
       id = "navbar",
+      selected = if(language() == "fr") "Données nivométriques" else "Snow Data", #default tab
+      header = tags$div(
+        class = "language-toggle-container",
+        actionButton(
+          "toggle_language",
+          if(language() == "fr") "English" else "Français",
+          class = "language-toggle-link",
+          style = "background: none; border: none; font-size: 12px; padding: 8px 12px; cursor: pointer;"
+        )
+      ),
+      tabPanel(
+        if(language() == "fr") "À propos" else "About",
+        div(style = "display: none;")  # Empty div, tab acts as button for popup
+      ),
       tabPanel(
         if(language() == "fr") "Données nivométriques" else "Snow Data",
         snowUI("snow")
@@ -230,52 +373,64 @@ server <- function(input, output, session) {
       tabPanel(
         if(language() == "fr") "Télécharger" else "Download Data",
         downloadUI("download")
+      ),
+      tabPanel(
+        if(language() == "fr") "FAQ" else "FAQ",
+        faqUI("faq")
       )
     )
   })
 
-
   # render contact bar dynamically
   output$dynamic_contact_bar <- renderUI({
-    req(language())  # Wait for language selection
+    req(language())
 
     div(class = "contact-bar",
         div(class = "contact-text",
             if(language() == "fr") {
-              "Pour plus d'information ou pour toute demande, veuillez écrire à nwtwaters@gov.nt.ca"
+              "Pour plus d'information ou pour toute demande, veuillez écrire à NWTHydrology-HydrologieTNO@gov.nt.ca"
             } else {
-              "Contact nwtwaters@gov.nt.ca for additional information or inquiries"
+              "Contact NWTHydrology-HydrologieTNO@gov.nt.ca for additional information or inquiries"
             }
         )
     )
   })
+
+  # Track module initialization to prevent double initialization
+  modules_initialized <- reactiveVal(FALSE)
+  last_language <- reactiveVal(NULL)
+  initializing <- reactiveVal(FALSE)  # Add flag to prevent concurrent initialization
 
   # Only run the rest of server once language is selected
   observe({
     req(language())
     req(preloaded_data())
 
-    snowServer("snow", first_visits, language, preloaded_data)
-    downloadServer("download", first_visits, station_data_types, language, preloaded_data)
-  })
+    # Prevent concurrent initialization
+    if (isolate(initializing())) {
+      return()
+    }
 
-  # Add the tab change observer
-  observeEvent(input$navbar, {
-    # Hide all info panels when switching tabs
-    shinyjs::runjs("
-      document.querySelectorAll('.info-panel').forEach(function(panel) {
-        panel.style.display = 'none';
-      });
-    ")
+    current_lang <- isolate(language())
+    prev_lang <- isolate(last_language())
 
-    if (input$navbar == "Snow Data") {
-      if (first_visits$snow) {
-        first_visits$snow <- FALSE
-      }
+    # Initialize modules on first run or when language changes
+    if (!isolate(modules_initialized()) || (current_lang != prev_lang)) {
+      initializing(TRUE)  # Set flag to prevent concurrent runs
+
+      snowServer("snow", first_visits, language, preloaded_data, show_welcome_trigger)
+      downloadServer("download", first_visits, station_data_types, language, preloaded_data)
+      faqServer("faq", first_visits, language)
+
+      modules_initialized(TRUE)
+      last_language(current_lang)
+
+      initializing(FALSE)  # Clear flag
     }
   })
 }
 
 shinyApp(ui = ui, server = server)
+
 
 

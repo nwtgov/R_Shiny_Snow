@@ -11,29 +11,40 @@ downloadUI <- function(id) {
           max-width: 800px;
           margin: 0 auto;
         }
-        .download-section {
-          background-color: white;
-          padding: 20px;
-          border-radius: 5px;
-          box-shadow: 0 0 15px rgba(0,0,0,0.1);
-          margin-bottom: 20px;
-        }
-          .disclaimer-section {
+        .download-controls-section {
           background-color: #f8f9fa;
           padding: 20px;
           border-radius: 5px;
           border-left: 4px solid #0066cc;
           margin-bottom: 20px;
+          margin-top: 20px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .disclaimer-section {
+          background-color: transparent;
+          padding: 20px 0;
+          border-radius: 0;
+          border-left: none;
+          margin-bottom: 20px;
           font-size: 14px;
         }
-        .flex-container {
-          display: flex;
-          gap: 20px;
-          margin-bottom: 30px;
-        }
-        .flex-item {
-          flex: 1;
-        }
+          .modal-dialog.modal-lg {
+            max-height: 90vh;
+            margin: 1.75rem auto;
+          }
+          .modal-content {
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+          }
+          .modal-body {
+            max-height: calc(90vh - 120px);
+            overflow-y: auto;
+            overflow-x: hidden;
+          }
+          .modal-header {
+            flex-shrink: 0;
+          }
         .flag-table {
           width: 100%;
           border-collapse: collapse;
@@ -58,35 +69,30 @@ downloadUI <- function(id) {
       ")),
       # javascript for the modal
       tags$script(HTML("
-        $(document).on('click', '#show_flags', function() {
+        $(document).on('click', '.flag-link#show_flags', function() {
           $('#flag_modal').modal('show');
+        });
+        $(document).on('click', '.flag-link#show_instruments', function() {
+          $('#instrument_modal').modal('show');
+        });
+        $(document).on('click', '.flag-link#show_column_names', function() {
+          $('#column_modal').modal('show');
         });
       "))
     ),
 
     div(class = "download-container",
-        # uiOutput from server
-        uiOutput(ns("download_title")),
-
-        # Snow Data Section
-        div(class = "flex-container",
-            # Download controls using uiOutput from server
-            div(class = "flex-item",
-                div(class = "download-section",
-                    uiOutput(ns("download_controls"))
-                )
-            ),
-
-            # disclaimer portal
-            div(class = "flex-item",
-                div(class = "disclaimer-section",
-                    uiOutput(ns("disclaimer_content"))
-                )
-            )
+        div(class = "download-controls-section",
+            uiOutput(ns("download_controls"))
         ),
-       # modal for flag table
-       uiOutput(ns("flag_modal_content"))
-  )
+        div(class = "disclaimer-section",
+            uiOutput(ns("disclaimer_content"))
+            ),
+        uiOutput(ns("flag_modal_content")),
+        uiOutput(ns("instrument_modal_content")),
+        uiOutput(ns("column_modal_content"))
+    ),
+    create_info_panel_UI(ns)
   )
 }
 
@@ -94,199 +100,232 @@ downloadUI <- function(id) {
 downloadServer <- function(id, first_visits, station_data_types, language, preloaded_data) {
   moduleServer(id, function(input, output, session) {
 
-    # title
-    output$download_title <- renderUI({
+    setup_info_panel_server(input, output, session, language)
+
+    # bring in preloaded data
+    #md_3 <- preloaded_data()$md_3
+    if (!is.null(preloaded_data()$md_3)) {
+      md_3 <- preloaded_data()$md_3
+    } else {
+      md_3 <- readRDS("data/md_3.rds")
+      md_3 <- update_site_names(md_3)
+    }
+
+    all_sites <- sort(unique(md_3$site))
+    all_years <- sort(unique(md_3$year))
+
+    # render disclaimer and dataflag modal reactively
+    output$disclaimer_content <- renderUI({
       req(language())
-      h2(if(language() == "fr") "Télécharger des données nivométriques" else "Download Snow Data")
+      create_disclaimer_content(language())
     })
+
+    output$flag_modal_content <- renderUI({
+      req(language())
+      create_flag_modal_content(language())
+    })
+
+    output$column_modal_content <- renderUI({
+      req(language())
+      create_column_modal_content(language())
+    })
+
+    output$instrument_modal_content <- renderUI({
+      req(language())
+      create_instrument_modal_content(language())
+    })
+
 
     # download controls
     output$download_controls <- renderUI({
       req(language())
 
-      # moved from observe blocks to upload site and year choices
-      available_years <- sort(unique(md_3$year), decreasing = TRUE)
-      available_years <- available_years[!available_years %in% c(1976, 1977)]
-      selected_year <- if (length(available_years) > 0) max(available_years) else NULL
-
-      sites <- character(0)
-      if (!is.null(input$snow_year) && input$snow_year %in% available_years) {
-        sites <- sort(unique(md_3$site[md_3$year == input$snow_year]))
-      }
+      # get available sites and years
+      all_sites <- sort(unique(md_3$site))
+      all_years <- sort(unique(md_3$year), decreasing = FALSE)
 
       tagList(
-        h3(if(language() == "fr") "Données nivométriques" else "Snow Data"),
-        selectInput(session$ns("snow_year"),
-                    if(language() == "fr") "Sélectionner l'année:" else "Select Year:",
-                    choices = available_years,  # MOVED: Set choices directly
-                    selected = if (!is.null(input$snow_year)) input$snow_year else selected_year),
-        selectInput(session$ns("snow_site"),
-                    if(language() == "fr") "Sélectionner le site:" else "Select Site:",
-                    choices = sites,  # MOVED: Set choices directly
-                    selected = if (!is.null(input$snow_site)) input$snow_site else NULL),
-        downloadButton(session$ns("download_snow"),
-                       if(language() == "fr") "Télécharger des données" else "Download Data")
+        tags$div(
+          style = "margin-bottom: 14px;",
+          HTML(
+            if (language() == "fr"){
+              "<h2 style='font-size: 22px; font-weight: bold; margin-bottom: 20px; margin-top: 0; padding: 0; color: #000000;'>Télécharger des données nivométriques</h2>
+              Recherchez un site en entrant un nom complet ou partiel. Sélectionnez votre plage d’années, puis cliquez sur Télécharger les données.<br/>"
+            }else{
+              "<h2 style='font-size: 22px; font-weight: bold; margin-bottom: 20px; margin-top: 0; padding: 0; color: #000000;'>Download Snow Data</h2>
+              Search for a site by typing the full or partial site name. Select your date range, and click Download Data.<br/>"
+            }
+          )
+        ),
+
+        # site seach and date range inputs as grid
+        tags$div(
+          style = "display: grid; grid-template-columns: 160px 1fr; row-gap: 12px; align-items: center;",
+
+          # Searchable site input (row 1)
+          tags$div(
+            style = "grid-column: 1;",
+            tags$strong(if (language() == "fr") "Sélectionner le site" else "Select Site")
+          ),
+          tags$div(
+            style = "grid-column: 2;",
+            selectizeInput(
+              session$ns("snow_site"),
+              label = NULL,
+              choices = all_sites,
+              selected = character(0),
+              options = list(
+                placeholder = if (language() == "fr")
+                  "Entrez le nom du site (complet ou partiel)"
+                else
+                  "Enter Full or Partial Site Name",
+                maxItems = 1,
+                create = FALSE,
+                dropdownParent = 'body',
+                selectOnTab = FALSE,
+                onInitialize = I("function() { this.setValue(''); }")
+              )
+            )
+          ),
+
+          # Date range (row 2)
+          tags$div(
+            style = "display: grid; grid-template-columns: 160px 1fr; align-items: center; margin-bottom: 12px;",
+            # Label column (aligns with "Select Site")
+            tags$div(style = "grid-column: 1;",
+                     tags$strong(if (language() == "fr") "Pour les années de" else "For years from")),
+            # Controls column (same total width as site input)
+            tags$div(
+              style = "grid-column: 2; display: flex; align-items: center; justify-content: space-between;",
+              # Start year (grow a bit to reduce middle gap)
+              tags$div(
+                style = "flex: 0 0 9.5em;",  # tweak 10–12em to taste
+                selectInput(session$ns("start_year"), label = NULL, choices = all_years, selected = min(all_years), width = "100%")
+              ),
+              # Minimal middle text
+              tags$span(style = "flex: 0 0 auto; margin: 0 11px;",
+                        if (language() == "fr") "à" else "to"),
+              # End year (same width; right edge aligns with site input)
+              tags$div(
+                style = "flex: 0 0 9.5em;",
+                selectInput(session$ns("end_year"), label = NULL, choices = all_years, selected = max(all_years), width = "100%")
+              )
+            )
+          ),
+          # Row 3 — note on year selections
+          tags$div(
+            style = "grid-column: 2 / 3; width: 100%; font-size: 12px; font-style: italic; color: #6b7280; margin-top: 22px;",
+            if (language() == "fr") {
+              "Note : Les années s’ajustent selon les données disponibles pour le site sélectionné."
+            } else {
+              "Note: Years update based on available data for the selected site."
+            }
+          )
+        ),
+
+        # download and site year warning
+        uiOutput(session$ns("site_year_warning")),
+        tags$div(
+          style = "display: flex; justify-content: flex-end; margin-top: 16px;",
+          downloadButton(session$ns("download_snow"),
+                         if(language() == "fr") "Télécharger des données" else "Download Data"
+          )
+        ),
+        # add space between download button and disclaimer
+        tags$div(style="height: 8px;")
       )
     })
 
-    # Added by MA July 2025 - french - helper function for data disclaimer
-    create_disclaimer_content <- function(lang) {
-      if(lang == "fr") {
-        HTML("
-          <h4 style='font-weight: bold; font-size: 18px;'>Avertissement concernant les données nivométriques</h4>
-          <p>Veuillez consulter ce <a href='https://doi.org/10.46887/2025-005' target='_blank'> lien </a>du rapport de données ouvertes qui inclut les métadonnées des sites et instruments de relevés nivométriques, des informations plus détaillées sur les indicateurs de données, notre clause de non-responsabilité, nos conditions d'utilisation et notre méthodologie de relevés nivométriques. Cette application est destinée à servir d'aide visuelle pour les informations clés fournies dans le rapport de données ouvertes.</p>
 
-          <p><strong>Ressources supplémentaires :</strong></p>
-          <ul>
-            <li><span class='flag-link' id='show_flags'>Descriptions des indicateurs de données</span>.</li>
-            <li>Les valeurs résumées sont incluses dans les <a href='https://www.gov.nt.ca/ecc/fr/services/gestion-et-suivi-de-leau/apercu-des-niveaux-deau-printaniers' target='_blank'>l'aperçu des niveaux d’eau printaniers aux TNO</a> chaque année.</li>
-          </ul>
-        ")
-      } else {
-        HTML("
-          <h4 style='font-weight: bold; font-size: 18px;'>Snow Data Disclaimer</h4>
-          <p>Please see this open data report <a href='https://doi.org/10.46887/2025-005' target='_blank'> link </a>for that includes snow survey site and instrument metadata, more specific data flag information, our data disclaimer, terms of use, and our snow survey methodology. This application is intended to act as a visual aide for the key information provided in the open data report.</p>
 
-          <p><strong>Additional Resources:</strong></p>
-          <ul>
-            <li><span class='flag-link' id='show_flags'>Data flags</span> descriptions.</li>
-            <li>Summary values are included in the <a href='https://www.gov.nt.ca/ecc/en/services/snow_monitoring' target='_blank'>NWT Spring Water Level Outlook</a> each year.</li>
-          </ul>
-        ")
+    observeEvent(input$snow_site, {
+      site_years <- md_3$year[md_3$site == input$snow_site]
+      site_years <- sort(unique(site_years))
+      if (!is.null(input$snow_site) && length(site_years) > 0) {
+        updateSelectInput(session, "start_year", choices = site_years, selected = min(site_years))
+        updateSelectInput(session, "end_year", choices = site_years, selected = max(site_years))
       }
-    }
+    })
 
-    # Added by MA July 2025 - french - helper fun for data flags popup
-    create_flag_modal_content <- function(lang) {
-      if (lang == "fr") {
-        tags$div(
-          id = "flag_modal", class = "modal fade", tabindex = "-1", role = "dialog",
-          tags$div(class = "modal-dialog modal-lg", role = "document",
-                   tags$div(class = "modal-content",
-                            tags$div(class = "modal-header",
-                                     tags$h4(class = "modal-title", "Indicateurs de données nivométriques"),
-                                     tags$button(type = "button", class = "close", "data-dismiss" = "modal", "×")
-                            ),
-                            tags$div(class = "modal-body",
-                                     tags$table(class = "flag-table",
-                                                tags$thead(
-                                                  tags$tr(
-                                                    tags$th("Indicateur"),
-                                                    tags$th("Description"),
-                                                    tags$th("Mesure à prendre")
-                                                  )
-                                                ),
-                                                  tags$tbody(
-                                                    tags$tr(tags$td("Y"), tags$td("Marque les valeurs/relevés qui ne représentent pas l'accumulation maximale d'EEN"), tags$td("selon le contexte")),
-                                                    tags$tr(tags$td("HS"), tags$td("Relevés forestiers historiques des régions Dehcho et Sahtu. Métadonnées des instruments non disponibles pour ces relevés."), tags$td("considérer retirer")),
-                                                    tags$tr(tags$td("P"), tags$td("Problème avec les données"), tags$td("retirer")),
-                                                    tags$tr(tags$td("Q"), tags$td("Données douteuses"), tags$td("considérer retirer")),
-                                                    tags$tr(tags$td("S"), tags$td("Données sommaires (points de relevés individuels non disponibles)"), tags$td("garder")),
-                                                    tags$tr(tags$td("Sk"), tags$td("Doute sur la qualité des données"), tags$td("retirer")),
-                                                    tags$tr(tags$td("Sk_2"), tags$td("Doute sur la la qualité des données pour raisons propre au site"), tags$td("retirer")),
-                                                    tags$tr(tags$td("unvrfd"), tags$td("Données non vérifiées par le personnel senior"), tags$td("garder")),
-                                                    tags$tr(tags$td("z"), tags$td("Poids des tubes enregistrés comme zéro"), tags$td("garder")),
-                                                    tags$tr(tags$td("ED"), tags$td("Mesures de profondeur supplémentaires"), tags$td("selon le contexte")),
-                                                    tags$tr(tags$td("VAR"), tags$td("Non inclus dans le sommaire 2022"), tags$td("garder")),
-                                                    tags$tr(tags$td("M"), tags$td("Le site utilise une moyenne pondérée pour les comparaison temporelles. Les comparaisons spatiales doivent utiliser les mesures d'EEN des terres hautes. Cela s'applique uniquement au site Pocket Lake."), tags$td("selon le contexte"))
-                                                  )
-
-                                     )
-                            )
-                   )
+    output$site_year_warning <- renderUI({
+      req(input$snow_site, input$start_year, input$end_year)
+      start_y <- as.numeric(input$start_year)
+      end_y   <- as.numeric(input$end_year)
+      # guide for if invalid range
+      if (is.na(start_y) || is.na(end_y) || start_y >= end_y) {
+          div(
+            style = "color: #d32f2f; font-size: 13px; margin-top: 10px;",
+            if (language() == "fr") {
+              "Aucune donnée disponible pour ce site et cette plage d'années - assurer que l'année de début est antérieure à l'année de fin."
+            } else {
+              "No data available for this site and date range - please make sure the start year is before the end year."
+            }
           )
-        )
       } else {
-        tags$div(
-          id = "flag_modal", class = "modal fade", tabindex = "-1", role = "dialog",
-          tags$div(class = "modal-dialog modal-lg", role = "document",
-                   tags$div(class = "modal-content",
-                            tags$div(class = "modal-header",
-                                     tags$h4(class = "modal-title", "Snow Data Flags"),
-                                     tags$button(type = "button", class = "close", "data-dismiss" = "modal", "×")
-                            ),
-                            tags$div(class = "modal-body",
-                                     tags$table(class = "flag-table",
-                                                tags$thead(
-                                                  tags$tr(
-                                                    tags$th("Flag"),
-                                                    tags$th("Description"),
-                                                    tags$th("Action")
-                                                  )
-                                                ),
-                                                tags$tbody(
-                                                  tags$tr(tags$td("Y"), tags$td("Flags values/surveys that do not represent maximum accumulation of SWE "), tags$td("context dependent")),
-                                                  tags$tr(tags$td("HS"), tags$td("Historic Forestry surveys from Dehcho and Sahtu regions. Instrument metadata not available for these surveys."), tags$td("consider remove")),
-                                                  tags$tr(tags$td("P"), tags$td("Problem with data"), tags$td("remove")),
-                                                  tags$tr(tags$td("Q"), tags$td("Questionable data"), tags$td("consider remove")),
-                                                  tags$tr(tags$td("S"), tags$td("Summary data (individual surveys points not available)"), tags$td("keep")),
-                                                  tags$tr(tags$td("Sk"), tags$td("Skeptical of data quality"), tags$td("remove")),
-                                                  tags$tr(tags$td("Sk_2"), tags$td("Skeptical of data quality for site specific reasons"), tags$td("remove")),
-                                                  tags$tr(tags$td("unvrfd"), tags$td("Data is unverified by senior staff"), tags$td("keep")),
-                                                  tags$tr(tags$td("z"), tags$td("Tube weights recorded as zero"), tags$td("keep")),
-                                                  tags$tr(tags$td("ED"), tags$td("Extra depth measurements"), tags$td("context dependent")),
-                                                  tags$tr(tags$td("VAR"), tags$td("Not included in 2022 summary"), tags$td("keep")),
-                                                  tags$tr(tags$td("M"), tags$td("Site uses weighted average for temporal comparison. Spatial comparisons should use upland swe measurements. This only applies to site Pocket Lake."), tags$td("keep"))
-
-
-
-                                                )
-                                     )
-                            )
-                   )
-          )
-        )
+        NULL
       }
-    }
+})
+      # disable download option when date range is invalid
+      observe({
+        req(input$snow_site, input$start_year, input$end_year)
 
-  # render disclaimer and dataflag modal reactively
-  output$disclaimer_content <- renderUI({
-    req(language())
-    create_disclaimer_content(language())
-  })
+        start_y <- as.numeric(input$start_year)
+        end_y   <- as.numeric(input$end_year)
 
-  output$flag_modal_content <- renderUI({
-    req(language())
-    create_flag_modal_content(language())
-  })
+        valid_range <- !is.na(start_y) && !is.na(end_y) && start_y < end_y
+
+        shinyjs::toggleState("download_snow", condition = valid_range)
+      })
 
 
     # Load required data and source in functions
     #md_3 <- readRDS("data/md_3.rds")
-  md_3 <- preloaded_data()$md_3
+    #md_3 <- preloaded_data()$md_3
     # Download snow data
     output$download_snow <- downloadHandler(
       filename = function() {
-        if(language() == "fr") {
+        year_range <- paste(input$start_year, input$end_year, sep = "-")
+        if (language() == "fr") {
           paste0("données_nivometriques_",
-                 input$snow_site, "_",
-                 input$snow_year, ".csv")
+                 gsub("[^A-Za-z0-9]", "_", input$snow_site), "_",
+                 year_range, ".csv")
         } else {
           paste0("snow_data_",
-              input$snow_site, "_",
-              input$snow_year, ".csv")
+                 gsub("[^A-Za-z0-9]", "_", input$snow_site), "_",
+                 year_range, ".csv")
         }
       },
       content = function(file) {
-        # Filter data for selected site and year
+        # Filter data for selected site and date range
         snow_data <- md_3 %>%
-          dplyr::filter(site == input$snow_site,
-                 year == input$snow_year) %>%
-          arrange(date_time)  #
+          dplyr::filter(
+            site == input$snow_site,
+            year >= as.numeric(input$start_year),
+            year <= as.numeric(input$end_year)
+          ) %>%
+          arrange(year, date_time)
+
+        #rename cols to match open report
+        if(language() == "en") {
+          snow_data <- rename_cols(snow_data)
+        }
 
         if(language() == "fr") {
           snow_data <- snow_data %>%
             dplyr::rename(
+              "site_ID" = "site_id",
+              "site_nom" = "site_name",
               "date_heure" = "date_time",
               "annee" = "year",
               "mois" = "month",
               "jour" = "day",
               "type_surface" = "surface_type",
-              "poids_vide_g" = "weight_empty_g",
-              "poids_plein_g" = "weight_full_g",
-              "een_cm" = "swe_cm",
+              "kit" = "Kit",
+              "poids_vide" = "weight_empty_g",
+              "poids_plein" = "weight_full_g",
+              "EEN_cm" = "swe_cm",
               "epaisseur_neige_cm" = "snow_depth_cm",
-              "densite" = "density",
+              "densite_gcm3" = "density",
               "indicateur_1" = "data_flag_1",
               "indicateur_2" = "data_flag_2",
               "region" = "region",
@@ -318,4 +357,5 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
     )
   })
 }
+
 

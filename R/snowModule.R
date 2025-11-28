@@ -1,12 +1,10 @@
 # UI function for snow module
 snowUI <- function(id) {
   ns <- NS(id)
-
   # Use absolutePanel for both map and controls to allow full-page map
   tagList(
     # Add a div with specific CSS
     tags$style(HTML("
-
         #map, #snow-snow_map {
           height: calc(100vh - 90px) !important;
           width: 100% !important;
@@ -17,7 +15,6 @@ snowUI <- function(id) {
           bottom: 30px
           z-index: 1;
         }
-
       .floating-panel {
         background-color: #ffffff;
         padding: 20px;
@@ -30,31 +27,16 @@ snowUI <- function(id) {
         max-width: 300px;
         z-index: 2;
       }
-
-      .info-panel {
-        background-color: white;
-        padding: 15px;
-        border-radius: 5px;
-        box-shadow: 0 0 15px rgba(0,0,0,0.2);
-        max-width: 300px;
-        max-height: 200px;
-        overflow-y: auto;
-        z-index: 2;
-        font-size: 12px;
-        display: none;  /* Hidden by default */
+      .leaflet-control-zoom {
+        position: fixed !important;
+        bottom: 80px !important;
+        left: 10px !important;
+        top: auto !important;
+        z-index: 1000 !important;
       }
-
-  .leaflet-control-zoom {
-    position: fixed !important;
-    bottom: 80px !important;
-    left: 10px !important;
-    top: auto !important;
-    z-index: 1000 !important;
-  }
-  .last-updated-control{
-  bottom:3px !important;
-  }
-
+      .last-updated-control{
+        bottom:3px !important;
+      }
     ")),
 
     # Map output
@@ -69,86 +51,71 @@ snowUI <- function(id) {
       top = 70,
       left = 20,
 
-      # year selection
-      selectInput(ns("snow_year"), "Select Year:", choices = NULL),
-
+      # year selection - label will be updated via JavaScript when language changes
+      # selectInput(ns("snow_year"), "Select Year:", choices = NULL),
+      uiOutput(ns("year_selector")),
        # added by MA July 2025 - french - uiOutput for snow_controls_content (created in server)
       uiOutput(ns("snow_controls_content"))
-
     ),
 
-    absolutePanel(
-      id = ns("info_panel"),
-      class = "info-panel",
-      fixed = TRUE,
-      draggable = TRUE,
-      bottom = 20,
-      left = 20,
-
-# added - french - use uiOutput for ino_panel_content (created in server)
-uiOutput(ns("info_panel_content"))
-      )
+    create_info_panel_UI(ns)
     )
 }
 
 # Server function for snow module - french - add language to server fun
-snowServer <- function(id, first_visits, language, preloaded_data) {
+snowServer <- function(id, first_visits, language, preloaded_data, show_welcome_trigger) {
   moduleServer(id, function(input, output, session) {
 
-    create_info_content <- function(lang) {
-      if(lang == "fr") {
-        HTML("<div style='font-weight: bold; font-size: 14px; margin-bottom: 10px;'>
-          Les relevés nivométriques sont collectées à partir de diverses stations de surveillance dans les TNO.
-        </div>
-           <div style='font-size: 13px; font-weight: bold; margin-bottom: 8px;'>Interprétation des données:</div>
-             <ul style='padding-left: 15px; margin-top: 5px;'>
-          <li><strong>Couleurs des stations:</strong> Indiquent l'équivalent en eau de la neige (EEN) en pourcentage de la normale:
-            <ul style='padding-left: 15px; margin-top: 5px;'>
-              <li><strong>Bleu:</strong> Supérieure à la normale</li>
-              <li><strong>Jaune:</strong> Près de la normale</li>
-              <li><strong>Rouge:</strong> Inférieur à la normale</li>
-            </ul>
-          </li>
-          <li><strong>Cliquez sur les stations</strong> pour voir des informations détaillées sur:
-            <ul style='padding-left: 15px; margin-top: 5px;'>
-              <li>Équivalent en eau de la neige (EEN)</li>
-              <li>Épaisseur de neige (NaN = aucune mesure)</li>
-              <li>Pourcentage de la normale</li>
-            </ul>
-          </li>
-        </ul>
-      ")
-      } else {
-        HTML("<div style='font-weight: bold; font-size: 14px; margin-bottom: 10px;'>
-          Snow data are collected from various monitoring stations across the NWT.
-        </div>
-           <div style='font-size: 13px; font-weight: bold; margin-bottom: 8px;'>Data interpretation:</div>
-             <ul style='padding-left: 15px; margin-top: 5px;'>
-          <li><strong>Station Colors:</strong> Indicate snow water equivalent (SWE) as a percentage of normal:
-            <ul style='padding-left: 15px; margin-top: 5px;'>
-              <li><strong>Blue:</strong> Above normal</li>
-              <li><strong>Yellow:</strong> Near normal</li>
-              <li><strong>Red:</strong> Below normal</li>
-            </ul>
-          </li>
-          <li><strong>Click stations</strong> to see detailed information about:
-            <ul style='padding-left: 15px; margin-top: 5px;'>
-              <li>Snow Water Equivalent (SWE)</li>
-              <li>Snow Depth (NaN = no measurements)</li>
-              <li>Percent of Normal</li>
-            </ul>
-          </li>
-        </ul>
-      ")
-      }
+    # Trigger welcome modal on first visit
+    observe({
+      req(first_visits$snow)
+      show_welcome_trigger(TRUE)  # This will trigger the modal in main server
+      first_visits$snow <- FALSE
+    })
+
+    # for info panel / welcome modal keep info
+    setup_info_panel_server(input, output, session, language)
+
+    # DATA LOADING
+    # load shapefiles
+    if (!is.null(preloaded_data()$mackenzie_basin)) {
+      mackenzie_basin <- preloaded_data()$mackenzie_basin
+      slave <- preloaded_data()$slave
+      peel <- preloaded_data()$peel
+      hay <- preloaded_data()$hay
+      liard <- preloaded_data()$liard
+    } else {
+      mackenzie_basin <- readRDS("data/MackenzieRiverBasin_FDA.rds")
+      slave <- readRDS("data/07NC005_DrainageBasin_BassinDeDrainage.rds")
+      peel <- readRDS("data/10MC002_DrainageBasin_BassinDeDrainage.rds")
+      hay <- readRDS("data/07OB001_DrainageBasin_BassinDeDrainage.rds")
+      liard <- readRDS("data/10ED002_DrainageBasin_BassinDeDrainage.rds")
     }
+
+    # load df and update site names if preload fails
+    if (!is.null(preloaded_data()$md_3)) {
+      md_3 <- preloaded_data()$md_3
+    } else {
+      md_3 <- readRDS("data/md_3.rds")
+      md_3 <- update_site_names(md_3)
+    }
+    max_snow_date <- format(max(md_3$date_time, na.rm = TRUE), "%Y-%m-%d")
+    available_years <- sort(unique(md_3$year), decreasing = TRUE)
+
+    #
 
     # REACTIVE EXPRESSIONS
     map_text <- reactive({
+      #print(paste("map_text() RUNNING - language:", language(), "snow_year:", input$snow_year, "at", Sys.time()))
       req(language())
       if(language() == "fr") {
         list(
-          last_updated = paste0("<strong>Dernière mise à jour:</strong> ", max_snow_date),
+          last_updated = paste0(
+            "<strong>Dernière mise à jour:</strong> ",
+            '<span title="Cette date indique quand les données ont été ajoutées pour la dernière fois à l\'application, et non la dernière fois que l\'application elle-même a été mise à jour." style="cursor: help; text-decoration: underline; text-decoration-style: dotted;">',
+            max_snow_date,
+            '</span>'
+          ),
           basins = list(
             mackenzie = "Bassin du Mackenzie",
             slave = "Bassin de la rivière des Esclaves",
@@ -157,14 +124,14 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
             liard = "Bassin de la rivière Liard"
           ),
           base_maps = list(
-            cartodb = "CartoDB Positron",
-            esri = "ESRI World"
+            cartodb = "Carte Simple",
+            esri = "Carte Satellite"
           ),
           legend = list(
-            title = paste0("Équivalent en eau de la neige <br> Printemps (", input$snow_year, ") <br> EEN (mm)")
+            title = paste0("Équivalent en eau de la neige <br> (% de la moyenne) <br> Printemps (", input$snow_year, ")")
           ),
           popup = list(
-            percent_avg = "Pourcentage de la normale (%)",
+            percent_avg = "Pourcentage de la moyenne (%)",
             swe = "EEN (mm)",
             snow_depth = "Épaisseur de neige (cm)",
             years_record = "Nombre d'années avec données"
@@ -172,7 +139,12 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
         )
       } else {
         list(
-          last_updated = paste0("<strong>Last updated:</strong> ", max_snow_date),
+          last_updated = paste0(
+            "<strong>Last updated:</strong> ",
+            '<span title="This date indicates when data was last added to the application, not when the application itself was last updated." style="cursor: help; text-decoration: underline; text-decoration-style: dotted;">',
+            max_snow_date,
+            '</span>'
+          ),
           basins = list(
             mackenzie = "Mackenzie Basin",
             slave = "Slave Basin",
@@ -181,11 +153,11 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
             liard = "Liard Basin"
           ),
           base_maps = list(
-            cartodb = "CartoDB Positron",
-            esri = "ESRI World"
+            cartodb = "Simple Map",
+            esri = "Satellite Map"
           ),
           legend = list(
-            title = paste0("Snow Water Equivalent <br> Spring (", input$snow_year, ") <br> SWE (mm)")
+            title = paste0("Snow Water Equivalent <br> (% of Average) <br> Spring (", input$snow_year, ")")
           ),
           popup = list(
             percent_avg = "Percent of Average (%)",
@@ -197,66 +169,19 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
       }
     })
 
-
-    # MODAL LOGIC
-    observe({
-      req(first_visits$snow)
-      modal_title <- if(language() == "fr") "Information sur les données nivométriques" else "Snow Data Information"
-      showModal(modalDialog(
-        title = modal_title,
-        create_info_content(language()),  # Use the helper function
-        easyClose = TRUE,
-        footer = tagList(
-          modalButton(if(language() == "fr") "Compris!" else "Got it!"),
-          actionButton(session$ns("keep_info"),
-                       if(language() == "fr") "Garder l'info visible" else "Keep info visible")
-        )
-      ))
-      first_visits$snow <- FALSE
-    })
-
-    # trigger map to start rendering even while modal and info pop up is open
-    observe({
-      req(language())
-    })
-
-
-    # OUTPUTS AND UI
-    output$info_panel_content <- renderUI({
-      req(language())
-      create_info_content(language())
-    })
-
-    # Handle the keep info button
-    observeEvent(input$keep_info, {
-      removeModal()
-      # Get the ID with proper namespacing
-      info_panel_id <- paste0("#", session$ns("info_panel"))
-      # Use JavaScript to show the panel
-      shinyjs::runjs(sprintf("document.querySelector('%s').style.display = 'block';", info_panel_id))
-    })
-
-    observe({
-      req(language())
-      updateSelectInput(session, "snow_year",
-                        label = if(language() == "fr") "Année:" else "Select Year:")
-    })
-
-    # controls content - warnings and refresh button
     output$snow_controls_content <- renderUI({
-      req(language())  # Wait for language selection
+      current_lang <- isolate(language())  # Use isolate to prevent re-running
       tagList(
         uiOutput(session$ns("year_warning")),
-
         actionButton(session$ns("refresh"),
-                     if(language() == "fr") "Actualiser" else "Refresh Data")
+                     if(current_lang == "fr") "Actualiser" else "Refresh Data")
       )
     })
 
     # make year warning text dynamic - for years where no snow surveys were conducted
     output$year_warning <- renderUI({
       req(input$snow_year)
-
+        current_lang <- isolate(language())
       if(input$snow_year %in% c(1976, 1977)) {
         tags$div(
           style = "color: #d32f2f; font-size: 12px; margin-top: 5px; padding: 8px; background-color: #ffebee; border-radius: 4px;",
@@ -276,38 +201,32 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
       }
     })
 
-    # DATA LOADING - moved this up and out of reactive contexts
-    mackenzie_basin <- readRDS("data/MackenzieRiverBasin_FDA.rds")
+    # Render year selector, reactive to langauge and preserves selected year
+    output$year_selector <- renderUI({
+      req(language())
+      req(available_years)
 
-    slave <- readRDS("data/07NC005_DrainageBasin_BassinDeDrainage.rds")
+      # Preserve current selection if it exists
+      current_selected <- isolate(input$snow_year)
+      if(is.null(current_selected)) {
+        current_selected <- max(available_years)
+      }
 
-    peel <- readRDS("data/10MC002_DrainageBasin_BassinDeDrainage.rds")
-
-    hay <- readRDS("data/07OB001_DrainageBasin_BassinDeDrainage.rds")
-
-    liard <- readRDS("data/10ED002_DrainageBasin_BassinDeDrainage.rds")
-
-    #md_3 <- readRDS("data/md_3.rds")
-    md_3 <- preloaded_data()$md_3
-    max_snow_date <- format(max(md_3$date_time, na.rm = TRUE), "%Y-%m-%d")
-
-    # Get available years from md_3
-    available_years <- sort(unique(md_3$year), decreasing = TRUE)
-
-    # Update year choices
-    observe({
-      updateSelectInput(session, "snow_year",
-                        choices = available_years,
-                        selected = max(available_years))
-  })
+      selectInput(
+        session$ns("snow_year"),
+        label = if(language() == "fr") "Année:" else "Select Year:",
+        choices = available_years,
+        selected = current_selected
+      )
+    })
 
     # Added by MA - May 15, 2025
     # Create reactive expression for data processing
     snow_data <- reactive({
+      #print(paste("snow_data() RUNNING - year:", input$snow_year, "language:", isolate(language()), "at", Sys.time()))
+
       req(input$snow_year)
       year <- input$snow_year
-
-      #year <- if(is.null(input$snow_year)) max(available_years) else input$snow_year
 
       # Added by MA - Jul 17, 2025 - return empty df if select year is 1976-77
       if(year %in% c(1976, 1977)) {
@@ -330,45 +249,46 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
       }
 
       NT_Data <- SWEsummary_shiny(data = md_3,
-                            surface="upland",
-                            minyear=2000,
-                            maxyear=2021,
-                            curmaxyear=year,
-                            flags = c("Y", "HS"), # note - open report removed "Y" data flags
-                            act="A",
-                            hdensity_sd  = 3,  # standard deviations for upper bound - should be 3
-                            ldensity_sd  = 2,  #  standard deviations for lower bound - should be 2
-                            ldensity_limit  = 0.1,  # should be 0.1
-                            write = FALSE) %>%
+                                  surface="upland",
+                                  minyear=2000,
+                                  maxyear=2021,
+                                  curmaxyear=year,
+                                  flags = c("Y", "HS"),
+                                  act="A",
+                                  hdensity_sd  = 3,
+                                  ldensity_sd  = 2,
+                                  ldensity_limit  = 0.1,
+                                  write = FALSE) %>%
         mutate(Jurisdiction = "NT") %>%
         rename("Region"="region", "Site"="site", "Length_Total"="yrs", "Length_Trimmed"="yrs2",
                "Mean_SWE_mm"="meanSWE01_cur", "Current_Depth"="meandepth_cur",
                "Current_SWE"="meanSWE_cur", "Percent_Normal"="pernorm")
 
-
       df <- NT_Data
 
       df <- df[!is.na(df$Percent_Normal), ]
 
-        # Convert to sf object
-        proj <- '+proj=longlat +datum=WGS84'
+      # Convert to sf object
+      proj <- '+proj=longlat +datum=WGS84'
 
-        df$Percent_Normal_Bin <- cut(df$Percent_Normal,
-                                     c(0, 50, 70, 90, 110, 130, 150, 500),
-                                     include.lowest = T,
-                                     labels = c("< 50%", "51 - 70%", "71 - 90%", "91 - 110%",
-                                                "111 - 130%", "131 - 150%", "> 151%"))
+      df$Percent_Normal_Bin <- cut(df$Percent_Normal,
+                                   c(0, 50, 70, 90, 110, 130, 150, 500),
+                                   include.lowest = T,
+                                   labels = c("< 50%", "51 - 70%", "71 - 90%", "91 - 110%",
+                                              "111 - 130%", "131 - 150%", "> 151%"))
 
-        PerCol <- leaflet::colorFactor(palette = "RdYlBu", df$Percent_Normal_Bin)
-        colours <- colorRampPalette(c("red", "yellow", "blue"))(n = 8)
+      PerCol <- leaflet::colorFactor(palette = "RdYlBu", df$Percent_Normal_Bin)
+      colours <- colorRampPalette(c("red", "yellow", "blue"))(n = 8)
 
-        return(df)
+      return(df)
     })
 
     # MAP RENDERING - only render basemap once vs each time a year is selected
     output$snow_map <- renderLeaflet({
+      #print(paste("output$snow_map RENDERING - snow_data rows:", nrow(snow_data()), "map_text language:", isolate(language()), "at", Sys.time()))
       req(snow_data())
       req(map_text())
+      map_text <- isolate(map_text()) # isolate to evaluate once per render and prevent duplicate rendering
       df <- snow_data()
 
       PerCol <- leaflet::colorFactor(palette = "RdYlBu", df$Percent_Normal_Bin)
@@ -388,7 +308,7 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
           addLayersControl(
             overlayGroups = c(map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay),
             baseGroups = c(map_text()$base_maps$cartodb, map_text()$base_maps$esri),
-            options = layersControlOptions(collapsed = FALSE)
+            options = layersControlOptions(collapsed = TRUE)
           ) %>%
           addControl(
             html = paste("<div style='padding: 0.5px; background-color: white; opacity: 0.6; border-radius: 0.5px; font-size: 10px;'>", map_text()$last_updated, "</div>"),
@@ -423,7 +343,7 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
           addLayersControl(
             overlayGroups = c(map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay),
             baseGroups = c(map_text()$base_maps$cartodb, map_text()$base_maps$esri),
-            options = layersControlOptions(collapsed = FALSE)
+            options = layersControlOptions(collapsed = TRUE)
           ) %>%
           addLegend(
             'bottomright',
@@ -442,5 +362,3 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
 
   })
 }
-
-
