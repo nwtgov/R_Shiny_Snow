@@ -10,6 +10,7 @@ library(ggplot2)
 
 source("R/content_functions.R")
 source("R/welcomeModal.R")
+source("R/metadataModule.R")
 source("R/SWE_summary_shiny.R")
 source("R/snowModule.R")
 source("R/downloadModule.R")
@@ -113,6 +114,11 @@ mainUI <- fluidPage(
             bottom: 30px;
             z-index: 1;
           }
+                    .leaflet-tooltip {
+          font-size: 16px !important;
+          font-weight: bold;
+        padding: 6px 10px !important;
+  }
           .floating-panel {
             background-color: #ffffff;
             padding: 20px;
@@ -124,6 +130,7 @@ mainUI <- fluidPage(
               -2px 0 15px rgba(0,0,0,0.1);
             max-width: 300px;
             z-index: 2;
+            font-size: 15px !important;
           }
           .contact-bar {
             position: fixed;
@@ -145,6 +152,12 @@ mainUI <- fluidPage(
           font-weight: bold;
           text-align: center;
           }
+            .version-text {
+    position: absolute;
+    left: 20px;
+    font-size: 13px;
+    color: #666;
+  }
           .language-toggle-container {
             position: absolute;
             right: 20px;
@@ -214,20 +227,28 @@ server <- function(input, output, session) {
   w <- Waiter$new()
   preloaded_data <- reactiveVal(NULL)
 
+  # define app version
+  app_version <- "1.1.0"
+
   observe({
     isolate({
-      md_3 <- readRDS("data/md_3.rds")
-      md_3 <- update_site_names(md_3)
-      mackenzie_basin <- readRDS("data/MackenzieRiverBasin_FDA.rds")
-      slave <- readRDS("data/07NC005_DrainageBasin_BassinDeDrainage.rds")
-      peel <- readRDS("data/10MC002_DrainageBasin_BassinDeDrainage.rds")
-      hay <- readRDS("data/07OB001_DrainageBasin_BassinDeDrainage.rds")
-      liard <- readRDS("data/10ED002_DrainageBasin_BassinDeDrainage.rds")
+      md_3 <- readRDS("data/snow_data.rds")
+      nwt_boundary <- load_github_rdsshp("NWT_ENR_BND_FND.rds")
+      mackenzie_basin <- load_github_rdsshp("MackenzieRiverBasin_FDA.rds")
+      slave <- load_github_rdsshp("07NC005_DrainageBasin_BassinDeDrainage.rds")
+      snare <- load_github_rdsshp("07SA001_DrainageBasin_BassinDeDrainage.rds")
+      YKriver <- load_github_rdsshp("07SB002_DrainageBasin_BassinDeDrainage.rds")
+      peel <- load_github_rdsshp("10MC002_DrainageBasin_BassinDeDrainage.rds")
+      hay <- load_github_rdsshp("07OB001_DrainageBasin_BassinDeDrainage.rds")
+      liard <- load_github_rdsshp("10ED002_DrainageBasin_BassinDeDrainage.rds")
 
       preloaded_data(list(
+        nwt_boundary = nwt_boundary,
         md_3 = md_3,
         mackenzie_basin = mackenzie_basin,
         slave = slave,
+        snare = snare,
+        YKriver = YKriver,
         peel = peel,
         hay = hay,
         liard = liard
@@ -287,6 +308,7 @@ server <- function(input, output, session) {
       language("fr")
       tab_map <- list(
         "Snow Data" = "Données nivométriques",
+        "Metadata" = "Métadonnées",
         "Download Data" = "Télécharger",
         "FAQ" = "FAQ",
         "About" = "À propos"
@@ -295,6 +317,7 @@ server <- function(input, output, session) {
       language("en")
       tab_map <- list(
         "Données nivométriques" = "Snow Data",
+        "Métadonnées" = "Metadata",
         "Télécharger" = "Download Data",
         "FAQ" = "FAQ",
         "À propos" = "About"
@@ -367,6 +390,10 @@ server <- function(input, output, session) {
         div(style = "display: none;")  # Empty div, tab acts as button for popup
       ),
       tabPanel(
+        if(language() == "fr") "Métadonnées" else "Metadata",  # Metadata tab comes first
+        metadataUI("metadata")
+      ),
+      tabPanel(
         if(language() == "fr") "Données nivométriques" else "Snow Data",
         snowUI("snow")
       ),
@@ -381,11 +408,15 @@ server <- function(input, output, session) {
     )
   })
 
-  # render contact bar dynamically
+  # render contact bar including version number dynamically
   output$dynamic_contact_bar <- renderUI({
     req(language())
 
     div(class = "contact-bar",
+        div(class = "version-text",
+            style = "position: absolute; left: 20px; font-size: 12px; color: #666;",
+            paste0("Version ", app_version)
+        ),
         div(class = "contact-text",
             if(language() == "fr") {
               "Pour plus d'information ou pour toute demande, veuillez écrire à NWTHydrology-HydrologieTNO@gov.nt.ca"
@@ -419,8 +450,9 @@ server <- function(input, output, session) {
       initializing(TRUE)  # Set flag to prevent concurrent runs
 
       snowServer("snow", first_visits, language, preloaded_data, show_welcome_trigger)
+      metadataServer("metadata", language, preloaded_data)
       downloadServer("download", first_visits, station_data_types, language, preloaded_data)
-      faqServer("faq", first_visits, language)
+      faqServer("faq", first_visits, language, app_version)
 
       modules_initialized(TRUE)
       last_language(current_lang)

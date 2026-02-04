@@ -15,6 +15,23 @@ snowUI <- function(id) {
           bottom: 30px
           z-index: 1;
         }
+
+  .leaflet-popup-content-wrapper {
+    font-size: 16px !important;
+  }
+
+  .leaflet-popup-content {
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+    margin: 15px 20px !important;
+  }
+    .leaflet-legend {
+    font-size: 14px !important;
+    background-color: #ffffff !important;
+    }
+    .leaflet-legend span {
+    font-size: 14px !important;
+  }
       .floating-panel {
         background-color: #ffffff;
         padding: 20px;
@@ -79,30 +96,50 @@ snowServer <- function(id, first_visits, language, preloaded_data, show_welcome_
     # DATA LOADING
     # load shapefiles
     if (!is.null(preloaded_data()$mackenzie_basin)) {
+      nwt_boundary <- preloaded_data()$nwt_boundary
       mackenzie_basin <- preloaded_data()$mackenzie_basin
       slave <- preloaded_data()$slave
+      snare <- preloaded_data()$snare
+      YKriver <- preloaded_data()$YKriver
       peel <- preloaded_data()$peel
       hay <- preloaded_data()$hay
       liard <- preloaded_data()$liard
     } else {
-      mackenzie_basin <- readRDS("data/MackenzieRiverBasin_FDA.rds")
-      slave <- readRDS("data/07NC005_DrainageBasin_BassinDeDrainage.rds")
-      peel <- readRDS("data/10MC002_DrainageBasin_BassinDeDrainage.rds")
-      hay <- readRDS("data/07OB001_DrainageBasin_BassinDeDrainage.rds")
-      liard <- readRDS("data/10ED002_DrainageBasin_BassinDeDrainage.rds")
+      nwt_boundary <- load_github_rdsshp("NWT_ENR_BND_FND.rds")
+      mackenzie_basin <- load_github_rdsshp("MackenzieRiverBasin_FDA.rds")
+      slave <- load_github_rdsshp("07NC005_DrainageBasin_BassinDeDrainage.rds")
+      snare <- load_github_rdsshp("07SA001_DrainageBasin_BassinDeDrainage.rds")
+      YKriver <- load_github_rdsshp("07SB002_DrainageBasin_BassinDeDrainage.rds")
+      peel <- load_github_rdsshp("10MC002_DrainageBasin_BassinDeDrainage.rds")
+      hay <- load_github_rdsshp("07OB001_DrainageBasin_BassinDeDrainage.rds")
+      liard <- load_github_rdsshp("10ED002_DrainageBasin_BassinDeDrainage.rds")
     }
 
-    # load df and update site names if preload fails
+    # load df if preload fails
     if (!is.null(preloaded_data()$md_3)) {
       md_3 <- preloaded_data()$md_3
     } else {
-      md_3 <- readRDS("data/md_3.rds")
-      md_3 <- update_site_names(md_3)
+      md_3 <- readRDS("data/snow_data.rds")
     }
+
+    # filter df down columns and rows to only swe values for interactive snow map (similar to original md_3 file)
+    md_3 <- md_3 %>%
+      select(-catchment, -catchment_reference, -ecological_region, -site_notes)
+
+    md_3 <- md_3 %>%
+      filter(!is.na(swe_cm))
+
     max_snow_date <- format(max(md_3$date_time, na.rm = TRUE), "%Y-%m-%d")
     available_years <- sort(unique(md_3$year), decreasing = TRUE)
 
-    #
+    # display consistent legend bins
+    all_legend_bins <- factor(
+      c("< 50%", "51 - 70%", "71 - 90%", "91 - 110%",
+        "111 - 130%", "131 - 150%", "> 151%"),
+      levels = c("< 50%", "51 - 70%", "71 - 90%", "91 - 110%",
+                 "111 - 130%", "131 - 150%", "> 151%"),
+      ordered = TRUE
+    )
 
     # REACTIVE EXPRESSIONS
     map_text <- reactive({
@@ -117,8 +154,11 @@ snowServer <- function(id, first_visits, language, preloaded_data, show_welcome_
             '</span>'
           ),
           basins = list(
+            nwt_boundary = "Frontière des TNO",
             mackenzie = "Bassin du Mackenzie",
             slave = "Bassin de la rivière des Esclaves",
+            snare = "Bassin de la rivière Snare",
+            YKriver = "Bassin de la rivière Yellowknife",
             peel = "Bassin de la rivière Peel",
             hay = "Bassin de la rivière au Foin",
             liard = "Bassin de la rivière Liard"
@@ -146,8 +186,11 @@ snowServer <- function(id, first_visits, language, preloaded_data, show_welcome_
             '</span>'
           ),
           basins = list(
+            nwt_boundary = "NWT boundary",
             mackenzie = "Mackenzie Basin",
             slave = "Slave Basin",
+            snare = "Snare Basin",
+            YKriver = "Yellowknife River Basin",
             peel = "Peel Basin",
             hay = "Hay Basin",
             liard = "Liard Basin"
@@ -220,15 +263,12 @@ snowServer <- function(id, first_visits, language, preloaded_data, show_welcome_
       )
     })
 
-    # Added by MA - May 15, 2025
     # Create reactive expression for data processing
     snow_data <- reactive({
-      #print(paste("snow_data() RUNNING - year:", input$snow_year, "language:", isolate(language()), "at", Sys.time()))
-
       req(input$snow_year)
       year <- input$snow_year
 
-      # Added by MA - Jul 17, 2025 - return empty df if select year is 1976-77
+      # return empty df if select year is 1976-77
       if(year %in% c(1976, 1977)) {
         df <- data.frame(
           Region = character(),
@@ -250,10 +290,10 @@ snowServer <- function(id, first_visits, language, preloaded_data, show_welcome_
 
       NT_Data <- SWEsummary_shiny(data = md_3,
                                   surface="upland",
-                                  minyear=2000,
-                                  maxyear=2021,
+                                  minyear=NULL,
+                                  maxyear=NULL,
                                   curmaxyear=year,
-                                  flags = c("Y", "HS"),
+                                  flags = c("Y", "HS", "P","Sk","Sk_2"),
                                   act="A",
                                   hdensity_sd  = 3,
                                   ldensity_sd  = 2,
@@ -265,7 +305,6 @@ snowServer <- function(id, first_visits, language, preloaded_data, show_welcome_
                "Current_SWE"="meanSWE_cur", "Percent_Normal"="pernorm")
 
       df <- NT_Data
-
       df <- df[!is.na(df$Percent_Normal), ]
 
       # Convert to sf object
@@ -297,16 +336,19 @@ snowServer <- function(id, first_visits, language, preloaded_data, show_welcome_
       if(nrow(df) == 0) {
         leaflet() %>%
           addTiles() %>%
-          setView(lng = -125, lat = 63, zoom = 4) %>%
+          setView(lng = -123, lat = 63.7, zoom = 4.5) %>%
           addProviderTiles(providers$CartoDB.Positron, group = map_text()$base_maps$cartodb) %>%
           addProviderTiles(providers$Esri.WorldImagery, group = map_text()$base_maps$esri) %>%
-          addPolylines(data = mackenzie_basin, weight = 2, color = "black", opacity = 0.8, group = map_text()$basins$mackenzie) %>%
-          addPolylines(data = slave, weight = 2, color = "black", opacity = 0.8, group = map_text()$basins$slave) %>%
-          addPolylines(data = peel, weight = 2, color = "black", opacity = 0.8, group = map_text()$basins$peel) %>%
-          addPolylines(data = hay, weight = 2, color = "black", opacity = 0.8, group = map_text()$basins$hay) %>%
-          addPolylines(data = liard, weight = 2, color = "black", opacity = 0.8, group = map_text()$basins$liard) %>%
+          addPolylines(data = nwt_boundary, weight = 2, color = "#000000", opacity = 0.8, group = map_text()$basins$nwt_boundary) %>%
+          addPolylines(data = mackenzie_basin, weight = 2, color = "#888888", opacity = 0.8, group = map_text()$basins$mackenzie) %>%
+          addPolylines(data = slave, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$slave) %>%
+          addPolylines(data = snare, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$snare) %>%
+          addPolylines(data = YKriver, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$YKriver) %>%
+          addPolylines(data = peel, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$peel) %>%
+          addPolylines(data = hay, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hay) %>%
+          addPolylines(data = liard, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$liard) %>%
           addLayersControl(
-            overlayGroups = c(map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay),
+            overlayGroups = c(map_text()$basins$nwt_boundary,map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$snare, map_text()$basins$YKriver, map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay),
             baseGroups = c(map_text()$base_maps$cartodb, map_text()$base_maps$esri),
             options = layersControlOptions(collapsed = TRUE)
           ) %>%
@@ -318,14 +360,17 @@ snowServer <- function(id, first_visits, language, preloaded_data, show_welcome_
       } else {
         leaflet() %>%
           addTiles() %>%
-          setView(lng = -125, lat = 63, zoom = 4) %>%
+          setView(lng = -123, lat = 63.7, zoom = 4.5) %>%
           addProviderTiles(providers$CartoDB.Positron, group = map_text()$base_maps$cartodb) %>%
           addProviderTiles(providers$Esri.WorldImagery, group = map_text()$base_maps$esri) %>%
-          addPolylines(data = mackenzie_basin, weight = 2, color = "black", opacity = 0.8, group = map_text()$basins$mackenzie) %>%
-          addPolylines(data = slave, weight = 2, color = "black", opacity = 0.8, group = map_text()$basins$slave) %>%
-          addPolylines(data = peel, weight = 2, color = "black", opacity = 0.8, group = map_text()$basins$peel) %>%
-          addPolylines(data = hay, weight = 2, color = "black", opacity = 0.8, group = map_text()$basins$hay) %>%
-          addPolylines(data = liard, weight = 2, color = "black", opacity = 0.8, group = map_text()$basins$liard) %>%
+          addPolylines(data = nwt_boundary, weight = 2, color = "#000000", opacity = 0.8, group = map_text()$basins$nwt_boundary) %>%
+          addPolylines(data = mackenzie_basin, weight = 2, color = "#888888", opacity = 0.8, group = map_text()$basins$mackenzie) %>%
+          addPolylines(data = slave, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$slave) %>%
+          addPolylines(data = snare, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$snare) %>%
+          addPolylines(data = YKriver, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$YKriver) %>%
+          addPolylines(data = peel, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$peel) %>%
+          addPolylines(data = hay, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hay) %>%
+          addPolylines(data = liard, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$liard) %>%
           addCircleMarkers(
             data = df,
             color = "black",
@@ -341,14 +386,14 @@ snowServer <- function(id, first_visits, language, preloaded_data, show_welcome_
             )
           ) %>%
           addLayersControl(
-            overlayGroups = c(map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay),
+            overlayGroups = c(map_text()$basins$nwt_boundary,map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$snare, map_text()$basins$YKriver,map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay),
             baseGroups = c(map_text()$base_maps$cartodb, map_text()$base_maps$esri),
             options = layersControlOptions(collapsed = TRUE)
           ) %>%
           addLegend(
             'bottomright',
             pal = PerCol,
-            values = df$Percent_Normal_Bin,
+            values = all_legend_bins,     #df$Percent_Normal_Bin,
             title = map_text()$legend$title,
             opacity = 1
           ) %>%
@@ -358,6 +403,31 @@ snowServer <- function(id, first_visits, language, preloaded_data, show_welcome_
             className = "last-updated-control"
           )
       }
+    })
+
+    # sub-basins toggled off by default
+    observe({
+      # Trigger when map is ready OR when year changes (map re-renders)
+      req(input$snow_year)
+      req(snow_data())
+
+      # Use isolate to prevent infinite loops
+      isolate({
+        map_text <- map_text()
+
+        # Small delay to ensure map is fully rendered
+        Sys.sleep(0.1)
+
+        leafletProxy(session$ns("snow_map"), session) %>%
+          hideGroup(c(
+            map_text()$basins$slave,
+            map_text()$basins$snare,
+            map_text()$basins$YKriver,
+            map_text()$basins$liard,
+            map_text()$basins$peel,
+            map_text()$basins$hay
+          ))
+      })
     })
 
   })

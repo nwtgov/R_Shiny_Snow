@@ -1,10 +1,8 @@
 # FAQ Module
-# UI function e
+# UI function
 faqUI <- function(id) {
   ns <- NS(id)
-
   fluidPage(
-    # Add styling to match other modules
     tags$head(
       tags$style(HTML("
         .faq-container {
@@ -162,7 +160,7 @@ faqUI <- function(id) {
         # FAQ Introduction
         uiOutput(ns("faq_intro")),
 
-        # FAQ Questions and Answers
+        # FAQ
         uiOutput(ns("faq_content"))
     ),
     create_info_panel_UI(ns)
@@ -170,7 +168,7 @@ faqUI <- function(id) {
 }
 
 # Server function
-faqServer <- function(id, first_visits, language) {
+faqServer <- function(id, first_visits, language, app_version) {
   moduleServer(id, function(input, output, session) {
 
     setup_info_panel_server(input, output, session, language)
@@ -237,7 +235,7 @@ faqServer <- function(id, first_visits, language) {
       return(df)
     })
 
-    # Category name mapping (CSV value -> Display name)
+    # Category name mapping ((CSV -> display name)
     category_names <- reactive({
       req(language())
       lang <- language()
@@ -267,19 +265,19 @@ faqServer <- function(id, first_visits, language) {
          if(lang == "fr") "Foire aux questions" else "Frequently Asked Questions")
     })
 
-    # FAQ Introduction - simplified, no grey box
+    # FAQ Introduction
     output$faq_intro <- renderUI({
       req(language())
       lang <- language()
       div(class = "faq-intro",
           p(if(lang == "fr")
-            "Cette section répond aux questions les plus courantes sur l'utilisation de l'application, l'interprétation des données et les ressources disponibles. Les questions sont organisées par catégorie: cliquez sur une catégorie pour l’ouvrir, puis sur une question pour voir la réponse."
+            "Cette section répond aux questions les plus courantes sur l'utilisation de l'explorateur, l'interprétation des données et les ressources disponibles. Les questions sont organisées par catégorie: cliquez sur une catégorie pour l’ouvrir, puis sur une question pour voir la réponse."
             else
-              "This section answers the most common questions about using the application, interpreting data, and available resources. Questions are organized by category — click a category to expand it, then click a question to see the answer.")
+              "This section answers the most common questions about using the Explorer, interpreting data, and available resources. Questions are organized by category — click a category to expand it, then click a question to see the answer.")
       )
     })
 
-    # FAQ Content - All categories with collapsible headers (collapsed by default)
+    # FAQ Content - collapsible headers categories
     output$faq_content <- renderUI({
       req(language())
       req(faq_data())
@@ -298,7 +296,7 @@ faqServer <- function(id, first_visits, language) {
                        "No questions found.")))
       }
 
-      # Check required columns
+      # Check req columns
       if(!all(c("question", "answer", "category") %in% colnames(df))) {
         return(div(class = "faq-section",
                    p(if(lang == "fr")
@@ -307,11 +305,11 @@ faqServer <- function(id, first_visits, language) {
                        "Error: Missing columns in FAQ data.")))
       }
 
-      # Get unique categories (handling semicolon-separated values)
+      # Get unique categories )
       all_categories <- character(0)
       for(i in seq_len(nrow(df))) {
         if(!is.na(df$category[i]) && trimws(df$category[i]) != "") {
-          # Split by semicolon and trim each
+          # Split by semicolon where applicable - cases when a Q&A falls in 2 categories
           cats <- trimws(strsplit(df$category[i], ";")[[1]])
           all_categories <- c(all_categories, cats)
         }
@@ -329,9 +327,7 @@ faqServer <- function(id, first_visits, language) {
 
       # Build sections for each category
       all_sections <- list()
-
       for(cat in categories) {
-        # Find rows that belong to this category
         cat_faqs_indices <- which(
           sapply(df$category, function(x) {
             if(is.na(x) || trimws(x) == "") return(FALSE)
@@ -339,15 +335,14 @@ faqServer <- function(id, first_visits, language) {
             cat %in% cats_in_row
           })
         )
-
         if(length(cat_faqs_indices) > 0) {
           cat_faqs <- df[cat_faqs_indices, ]
 
-          # Get display name for category
+          # display name for category
           display_name <- if(cat %in% names(cat_map)) {
             cat_map[[cat]]
           } else {
-            cat  # Use category name as-is if not in mapping
+            cat
           }
 
           # Add collapsible category header with icon (collapsed by default - icon rotated)
@@ -369,6 +364,9 @@ faqServer <- function(id, first_visits, language) {
             if(!is.na(cat_faqs$question[i]) && trimws(cat_faqs$question[i]) != "" &&
                !is.na(cat_faqs$answer[i]) && trimws(cat_faqs$answer[i]) != "") {
 
+              #replace app version placeholder in csv with actual version
+              answer_text <- gsub("\\{\\{VERSION\\}\\}", app_version, cat_faqs$answer[i])
+
               faq_list[[length(faq_list) + 1]] <- div(class = "faq-item",
                                                       tags$button(
                                                         class = "faq-question",
@@ -381,7 +379,7 @@ faqServer <- function(id, first_visits, language) {
                                                       ),
                                                       div(
                                                         class = "faq-answer",
-                                                        HTML(cat_faqs$answer[i])
+                                                        HTML(answer_text)
                                                       )
               )
             }

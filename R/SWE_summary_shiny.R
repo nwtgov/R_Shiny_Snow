@@ -3,9 +3,9 @@
 # user_path <- "C:/Users/maucl/Documents/"
 # data_path <- paste0(user_path,"Data/")
 
-#other req functions:
+# other req functions:
 ######################################
-#opposite of %in%:
+# opposite of %in%:
 `%!in%` = Negate(`%in%`)
 library(dplyr)
 
@@ -93,11 +93,13 @@ SWEsummary_shiny <- function(data,
       } else {
         dplyr::n_distinct(year[year > minyear & year < maxyear], na.rm = TRUE)
       },
-       meanSWE_specRange = if(is.null(minyear) || is.null(maxyear)) {
-        round(mean(yearlySWE[year >= site_min_year & year <= site_max_year], na.rm = TRUE) * 10, 4)
+      meanSWE_specRange = if(is.null(minyear) || is.null(maxyear)) {
+        round(mean(yearlySWE[year >= site_min_year & year <= site_max_year & year != curmaxyear], na.rm = TRUE) * 10, 4)
       } else {
-        round(mean(yearlySWE[year > minyear & year < maxyear], na.rm = TRUE) * 10, 4)
+        round(mean(yearlySWE[year > minyear & year < maxyear & year != curmaxyear], na.rm = TRUE) * 10, 4)
       },
+
+      ##
       meandepth_cur = round(mean(yearlydepth[year == curmaxyear], na.rm = TRUE), 4),
       meanSWE_cur = round(mean(yearlySWE[year == curmaxyear], na.rm = TRUE) * 10, 6),
       meanSWE01_cur = if(is.null(minyear)) {
@@ -116,16 +118,12 @@ SWEsummary_shiny <- function(data,
       site_max_year = dplyr::first(site_max_year)
     )
 
-
     if(write == T) {
     write.csv(Table, file = paste0(data_path, "csv_data/", curmaxyear, ".csv"))
   }
 
   return(Table)
 }
-
-
-
 
 
 ##

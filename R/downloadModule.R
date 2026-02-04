@@ -103,12 +103,10 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
     setup_info_panel_server(input, output, session, language)
 
     # bring in preloaded data
-    #md_3 <- preloaded_data()$md_3
     if (!is.null(preloaded_data()$md_3)) {
       md_3 <- preloaded_data()$md_3
     } else {
-      md_3 <- readRDS("data/md_3.rds")
-      md_3 <- update_site_names(md_3)
+      md_3 <- readRDS("data/snow_data.rds")
     }
 
     all_sites <- sort(unique(md_3$site))
@@ -150,10 +148,10 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
           HTML(
             if (language() == "fr"){
               "<h2 style='font-size: 22px; font-weight: bold; margin-bottom: 20px; margin-top: 0; padding: 0; color: #000000;'>Télécharger des données nivométriques</h2>
-              Recherchez un site en entrant un nom complet ou partiel. Sélectionnez votre plage d’années, puis cliquez sur Télécharger les données.<br/>"
+              Recherchez un site en tapant le nom complet ou partiel du site. Sélectionnez votre plage de dates. Cliquez sur le bouton « Télécharger les données » télécharger un fichier CSV contenant toutes les mesures de relevés nivométriques du site et des années sélectionnées.<br/>"
             }else{
               "<h2 style='font-size: 22px; font-weight: bold; margin-bottom: 20px; margin-top: 0; padding: 0; color: #000000;'>Download Snow Data</h2>
-              Search for a site by typing the full or partial site name. Select your date range, and click Download Data.<br/>"
+              Search for a site by typing the full or partial site name. Select your date range. Click the 'Download Data' button to download a CSV file containing all snow survey measurements from the selected site and year(s).<br/>"
             }
           )
         ),
@@ -279,8 +277,6 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
 
 
     # Load required data and source in functions
-    #md_3 <- readRDS("data/md_3.rds")
-    #md_3 <- preloaded_data()$md_3
     # Download snow data
     output$download_snow <- downloadHandler(
       filename = function() {
@@ -305,31 +301,32 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
           ) %>%
           arrange(year, date_time)
 
+        # removing activity column from downloaded data
+        snow_data <- snow_data %>%
+          select(-activity)
+
         #rename cols to match open report
         if(language() == "en") {
-          snow_data <- rename_cols(snow_data)
+          snow_data <- snow_data %>%
+            rename(site_name = site, SWE_cm = swe_cm)
         }
 
         if(language() == "fr") {
           snow_data <- snow_data %>%
             dplyr::rename(
-              "site_ID" = "site_id",
               "site_nom" = "site_name",
               "date_heure" = "date_time",
               "annee" = "year",
               "mois" = "month",
               "jour" = "day",
               "type_surface" = "surface_type",
-              "kit" = "Kit",
-              "poids_vide" = "weight_empty_g",
-              "poids_plein" = "weight_full_g",
+              "poids_vide" = "weight_empty",
+              "poids_plein" = "weight_full",
               "EEN_cm" = "swe_cm",
               "epaisseur_neige_cm" = "snow_depth_cm",
-              "densite_gcm3" = "density",
+              "densite" = "density",
               "indicateur_1" = "data_flag_1",
-              "indicateur_2" = "data_flag_2",
-              "region" = "region",
-              "activite" = "activity"
+              "indicateur_2" = "data_flag_2"
             ) %>%
             dplyr::reframe(
               .by = everything(),
@@ -341,6 +338,7 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
               type_surface = case_when(
                 type_surface == "upland" ~ "terres_hautes",
                 type_surface == "lake" ~ "lac",
+                type_surface == "meadow" ~ "pré",
                 TRUE ~ type_surface
               )
             )
