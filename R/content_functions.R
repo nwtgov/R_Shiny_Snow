@@ -152,7 +152,7 @@ create_disclaimer_content <- function(lang) {
           <h4 style='font-weight: bold; font-size: 18px;'>Data Disclaimer</h4>
           <p>This Explorer was created by the Government of Northwest Territories - Department of Environment and Climate Change (GNWT-ECC).
           This Explorer serves as a visual and interactive companion to the <a href='https://doi.org/10.46887/2025-005' target='_blank'> Open Data Report (2025) </a> prepared by GNWT-ECC and the Northwest Territories Geological Survey (NTGS).
-          The report includes tables and maps that summarise snow water equivalent (SWE) and snow depth data from 1995-2024.
+          The report includes tables and maps that summarise snow water equivalent (SWE) and snow depth data from 1965-2024.
           The report contains instrument, site metadata, and methodology information that will support and inform data use.
           This Explorer features similar information, with the addition of more recent snow survey data.
           <p>This Explorer is provided for informational purposes only. It does not contain any warranties, representations, or quality commitments, whether expressed or implicit, nor does it contain any guarantees regarding the correctness, integrity, and quality of the information. </p>
