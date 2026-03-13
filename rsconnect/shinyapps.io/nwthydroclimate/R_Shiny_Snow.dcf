@@ -1,0 +1,12 @@
+name: R_Shiny_Snow
+title: R_Shiny_Snow
+username: nwthydroclimate
+account: nwthydroclimate
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14824019
+bundleId: 11702731
+url: https://nwthydroclimate.shinyapps.io/R_Shiny_Snow/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

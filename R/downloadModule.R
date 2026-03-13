@@ -91,8 +91,7 @@ downloadUI <- function(id) {
         uiOutput(ns("flag_modal_content")),
         uiOutput(ns("instrument_modal_content")),
         uiOutput(ns("column_modal_content"))
-    ),
-    create_info_panel_UI(ns)
+    )
   )
 }
 
@@ -100,7 +99,7 @@ downloadUI <- function(id) {
 downloadServer <- function(id, first_visits, station_data_types, language, preloaded_data) {
   moduleServer(id, function(input, output, session) {
 
-    setup_info_panel_server(input, output, session, language)
+    # setup_info_panel_server(input, output, session, language)
 
     # bring in preloaded data
     if (!is.null(preloaded_data()$md_3)) {

@@ -9,7 +9,7 @@ library(utils)
 library(ggplot2)
 
 source("R/content_functions.R")
-source("R/welcomeModal.R")
+source("R/aboutModule.R")
 source("R/metadataModule.R")
 source("R/SWE_summary_shiny.R")
 source("R/snowModule.R")
@@ -263,39 +263,7 @@ server <- function(input, output, session) {
   )
 
   language <- reactiveVal("en") # set default lang
-  show_welcome_trigger <- reactiveVal(FALSE) # reactive modal trigger
-  previous_tab <- reactiveVal(NULL) # travk prev tab ( for "About" button)
 
-  setup_welcome_modal_handlers(session, language, show_welcome_trigger) # lang toggle, keep info button, etc
-
-  observe({
-    # Store current tab as previous before it potentially changes
-    if(!is.null(input$navbar) &&
-       input$navbar != "About" &&
-       input$navbar != "À propos") {
-      previous_tab(input$navbar)
-    }
-  })
-
-  # Handle About tab click - show welcome modal and stay on current tab
-  observeEvent(input$navbar, {
-    # Check if About tab was clicked (in either language)
-    if(input$navbar == "About" || input$navbar == "À propos") {
-      show_welcome_trigger(TRUE)
-      # Switch back to previous tab (or default)
-      target_tab <- if(!is.null(isolate(previous_tab()))) {
-        isolate(previous_tab())
-      } else {
-        if(language() == "fr") "Données nivométriques" else "Snow Data"
-      }
-      # Switch back immediately
-      updateNavbarPage(
-        session,
-        "navbar",
-        selected = target_tab
-      )
-    }
-  }, ignoreInit = TRUE)
   # language toggle and tab preservation
   desired_tab <- reactiveVal(NULL)
 
@@ -375,7 +343,7 @@ server <- function(input, output, session) {
         )
       ),
       id = "navbar",
-      selected = if(language() == "fr") "Données nivométriques" else "Snow Data", #default tab
+      selected = if(language() == "fr") "À propos" else "About", #default tab
       header = tags$div(
         class = "language-toggle-container",
         actionButton(
@@ -387,11 +355,7 @@ server <- function(input, output, session) {
       ),
       tabPanel(
         if(language() == "fr") "À propos" else "About",
-        div(style = "display: none;")  # Empty div, tab acts as button for popup
-      ),
-      tabPanel(
-        if(language() == "fr") "Métadonnées" else "Metadata",  # Metadata tab comes first
-        metadataUI("metadata")
+        aboutUI("about")
       ),
       tabPanel(
         if(language() == "fr") "Données nivométriques" else "Snow Data",
@@ -400,6 +364,10 @@ server <- function(input, output, session) {
       tabPanel(
         if(language() == "fr") "Télécharger" else "Download Data",
         downloadUI("download")
+      ),
+      tabPanel(
+        if(language() == "fr") "Métadonnées" else "Metadata",
+        metadataUI("metadata")
       ),
       tabPanel(
         if(language() == "fr") "FAQ" else "FAQ",
@@ -449,7 +417,8 @@ server <- function(input, output, session) {
     if (!isolate(modules_initialized()) || (current_lang != prev_lang)) {
       initializing(TRUE)  # Set flag to prevent concurrent runs
 
-      snowServer("snow", first_visits, language, preloaded_data, show_welcome_trigger)
+      aboutServer("about", language)
+      snowServer("snow", first_visits, language, preloaded_data)
       metadataServer("metadata", language, preloaded_data)
       downloadServer("download", first_visits, station_data_types, language, preloaded_data)
       faqServer("faq", first_visits, language, app_version)
@@ -457,7 +426,7 @@ server <- function(input, output, session) {
       modules_initialized(TRUE)
       last_language(current_lang)
 
-      initializing(FALSE)  # Clear flag
+      initializing(FALSE)
     }
   })
 }

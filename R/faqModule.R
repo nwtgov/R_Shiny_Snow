@@ -162,8 +162,7 @@ faqUI <- function(id) {
 
         # FAQ
         uiOutput(ns("faq_content"))
-    ),
-    create_info_panel_UI(ns)
+    )
   )
 }
 

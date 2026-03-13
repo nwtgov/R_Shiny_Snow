@@ -73,22 +73,14 @@ snowUI <- function(id) {
       uiOutput(ns("year_selector")),
        # added by MA July 2025 - french - uiOutput for snow_controls_content (created in server)
       uiOutput(ns("snow_controls_content"))
-    ),
-
-    create_info_panel_UI(ns)
+    )
     )
 }
 
 # Server function for snow module - french - add language to server fun
-snowServer <- function(id, first_visits, language, preloaded_data, show_welcome_trigger) {
+snowServer <- function(id, first_visits, language, preloaded_data) {
   moduleServer(id, function(input, output, session) {
 
-    # Trigger welcome modal on first visit
-    observe({
-      req(first_visits$snow)
-      show_welcome_trigger(TRUE)  # This will trigger the modal in main server
-      first_visits$snow <- FALSE
-    })
 
     # for info panel / welcome modal keep info
     setup_info_panel_server(input, output, session, language)
