@@ -2,6 +2,7 @@
 downloadUI <- function(id) {
   ns <- NS(id)
 
+  tagList(
   fluidPage(
     # Add some padding and styling
     tags$head(
@@ -92,6 +93,8 @@ downloadUI <- function(id) {
         uiOutput(ns("instrument_modal_content")),
         uiOutput(ns("column_modal_content"))
     )
+  ),
+  footer_curve_ui()
   )
 }
 

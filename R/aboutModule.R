@@ -105,9 +105,12 @@ create_about_content <- function(lang) {
 # UI function
 aboutUI <- function(id) {
   ns <- NS(id)
-  div(
-    style = "padding: 20px; max-width: 900px; margin: 0 auto;",
-    uiOutput(ns("about_content"))
+  tagList(
+    div(
+      style = "padding: 20px; max-width: 900px; margin: 0 auto;",
+      uiOutput(ns("about_content"))
+    ),
+    footer_curve_ui()
   )
 }
 

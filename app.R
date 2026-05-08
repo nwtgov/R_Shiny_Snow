@@ -40,11 +40,11 @@ mainUI <- fluidPage(
             z-index: 9999 !important;
           }
           .welcome-modal {
-            width: 90% !important;      /* ~90% screen width */
+            width: 90% !important;
             height: 90% !important;
           }
           .welcome-modal .modal-body {
-            overflow-y: auto;           /* scroll content if long */
+            overflow-y: auto;
           }
           .navbar {
             margin-bottom: 0;
@@ -210,10 +210,381 @@ mainUI <- fluidPage(
             color: #000;
             font-weight: bold;
           }
+
+  /* ===== Mobile side panel ===== */
+  .mobile-hamburger {
+    display: none;
+    position: fixed;
+    top: 8px;
+    right: 12px;
+    z-index: 10010;
+    background: #0066cc;
+    border: none;
+    color: #ffffff;
+    font-size: 28px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .mobile-side-panel {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: -280px;
+    width: 280px;
+    height: 100%;
+    background-color: #ffffff;
+    z-index: 10020;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.25);
+    transition: right 0.3s ease;
+    overflow-y: auto;
+    padding: 0;
+  }
+  .mobile-side-panel.open {
+    right: 0;
+  }
+  .side-panel-header {
+    background-color: #0066cc;
+    color: #ffffff;
+    padding: 16px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .side-panel-close {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+  .side-panel-title {
+    padding: 16px 20px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+    border-bottom: 2px solid #2699D5;
+  }
+  .side-panel-nav a {
+    display: block;
+    padding: 14px 20px;
+    color: #333;
+    text-decoration: none;
+    font-size: 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+  }
+  .side-panel-nav a:hover,
+  .side-panel-nav a.active-link {
+    background-color: #f0f7ff;
+    color: #0066cc;
+    font-weight: bold;
+  }
+  .side-panel-footer {
+    padding: 16px 20px;
+    border-top: 2px solid #2699D5;
+    font-size: 13px;
+    color: #666;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+    background: #ffffff;
+  }
+  .side-panel-footer .side-contact {
+    color: #0066cc;
+    font-weight: bold;
+    font-size: 12px;
+    margin-top: 8px;
+    word-wrap: break-word;
+  }
+  .mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 10015;
+  }
+  .mobile-overlay.open {
+    display: block;
+  }
+
+  /* Full-bleed footer (hr + curve): tab content is narrower than viewport — break out to 100vw like navbar */
+  .tab-footer-curve-stack {
+    width: 100vw;
+    max-width: 100vw;
+    margin: 28px calc(50% - 50vw) 0 calc(50% - 50vw);
+    padding: 0;
+    box-sizing: border-box;
+    display: block;
+    clear: both;
+    overflow-x: clip;
+    overflow-y: visible;
+    position: relative;
+  }
+  .tab-footer-curve-stack .tab-footer-curve-rule {
+    border: 0;
+    border-top: 3px solid #2699D5;
+    margin: 0;
+    width: 100%;
+  }
+  /* Footer curve: fixed band height; background-size height % zooms vertically (higher % = wider drawn bitmap = more horizontal crop on narrow windows) */
+  .tab-footer-curve-stack .tab-footer-curve-crop {
+    width: 100%;
+    margin: 10px 0 0 0;
+    overflow: hidden;
+    height: 220px;
+    box-sizing: border-box;
+    background-image: url('footer_curve.png');
+    background-repeat: no-repeat;
+    background-position: center top;
+    background-size: auto 220%;
+    line-height: 0;
+  }
+  .tab-footer-curve-stack {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s linear;
+}
+.tab-pane.active.footer-visible .tab-footer-curve-stack {
+  opacity: 1;
+  visibility: visible;
+}
+
+
+  /* ===== Mobile media query ===== */
+  @media (max-width: 768px) {
+    .mobile-hamburger {
+      display: block !important;
+    }
+    .mobile-side-panel {
+      display: block;
+    }
+    /* Hide desktop navbar tabs and language toggle */
+    .navbar-nav {
+      display: none !important;
+    }
+    .language-toggle-container {
+      display: none !important;
+    }
+    /* Hide desktop bottom bar on mobile */
+    .contact-bar {
+      display: none !important;
+    }
+    /* Simplify navbar for mobile */
+    .navbar {
+      height: 45px !important;
+    }
+    .navbar-brand {
+      height: 45px !important;
+    }
+    .navbar-title-text {
+      font-size: 16px !important;
+      margin-left: 10px !important;
+      margin-right: 10px !important;
+    }
+    .navbar-brand img {
+      height: 28px;
+    }
+    body::after {
+      top: 45px !important;
+      height: 6px !important;
+    }
+    /* Adjust map for mobile header */
+    #map, #snow-snow_map {
+      top: 45px !important;
+      bottom: 0 !important;
+      height: calc(100vh - 50px) !important;
+    }
+    /* Download form: stack labels above inputs on mobile */
+    .download-container {
+      padding: 10px !important;
+    }
+    .download-controls-section {
+      padding: 12px !important;
+    }
+    .download-controls-section div[style*='grid-template-columns'] {
+      display: block !important;
+    }
+    .download-controls-section div[style*='grid-column'] {
+      margin-bottom: 6px;
+    }
+    .download-controls-section div[style*='flex'] {
+      display: block !important;
+    }
+    .download-controls-section div[style*='flex'] > div {
+      width: 100% !important;
+      flex: none !important;
+      margin-bottom: 6px;
+    }
+    .download-controls-section .selectize-input,
+    .download-controls-section .form-control {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    /* Metadata floating panel: fit mobile */
+    .floating-panel {
+      max-width: 170px !important;
+      font-size: 13px !important;
+      padding: 10px !important;
+      top: 55px !important;
+      left: 8px !important;
+    }
+    /* Metadata map: adjust for mobile header */
+    #metadata-metadata_map {
+      top: 45px !important;
+      bottom: 0 !important;
+      height: calc(100vh - 50px) !important;
+    }
+    /* Hide navbar title on mobile (it's in the side panel instead) */
+    .navbar-title-text {
+      display: none !important;
+    }
+    /* FAQ: reduce side padding on mobile */
+    .faq-container {
+      padding: 8px !important;
+      max-width: 100% !important;
+    }
+    .faq-section {
+      padding: 10px !important;
+    }
+    /* Hide hover tooltips on mobile (can't hover on touch) */
+    .leaflet-tooltip {
+      display: none !important;
+    }
+    /* Metadata popup: smaller text on mobile */
+    .metadata-popup .leaflet-popup-content-wrapper {
+      min-width: unset !important;
+      max-width: 90vw !important;
+    }
+    .metadata-popup .leaflet-popup-content {
+      font-size: 13px !important;
+      margin: 8px 10px !important;
+    }
+    .metadata-popup .metadata-table td {
+      font-size: 12px !important;
+      padding: 4px 6px 4px 0 !important;
+    }
+    .metadata-popup .metadata-header {
+      font-size: 14px !important;
+    }
+    /* Snow legend: smaller text on mobile */
+    .leaflet .legend {
+      font-size: 11px !important;
+      padding: 6px 8px !important;
+      max-width: 140px !important;
+    }
+    .leaflet .legend i {
+      width: 14px !important;
+      height: 14px !important;
+    }
+        .tab-footer-curve-stack {
+      padding-bottom: 0;
+      margin-top: 20px;
+    }
+  }
+
           "))
   ),
+
+  # Hamburger button for mobile
+  tags$button(
+    class = "mobile-hamburger",
+    id = "mobile_menu_toggle",
+    onclick = "toggleMobileMenu()",
+    HTML("&#9776;")
+  ),
+
+  # Mobile overlay
+  div(class = "mobile-overlay", id = "mobile_overlay",
+      onclick = "toggleMobileMenu()"),
+
+  # Mobile side panel (populated dynamically)
+  uiOutput("mobile_side_panel"),
+
   uiOutput("dynamic_navbar"),
-  uiOutput("dynamic_contact_bar")
+  uiOutput("dynamic_contact_bar"),
+
+  # JavaScript for mobile menu
+  tags$script(HTML("
+    function toggleMobileMenu() {
+      var panel = document.getElementById('side_panel');
+      var overlay = document.getElementById('mobile_overlay');
+      if (panel && overlay) {
+        panel.classList.toggle('open');
+        overlay.classList.toggle('open');
+      }
+    }
+    function switchTabOnly(tabValue) {
+    var tabLink = $('#navbar').find('a[data-value=\"' + tabValue + '\"]');
+    if (tabLink.length > 0) {
+      tabLink.click();
+    }
+  }
+    function mobileSwitchTab(tabValue) {
+      var tabLink = $('#navbar').find('a[data-value=\"' + tabValue + '\"]');
+      if (tabLink.length > 0) {
+        tabLink.click();
+      }
+      $('.side-panel-nav a').removeClass('active-link');
+      $('.side-panel-nav a[data-tab=\"' + tabValue + '\"]').addClass('active-link');
+      toggleMobileMenu();
+    }
+    // Footer reveal controller (simple deterministic delay)
+    var footerRevealTimer = null;
+
+    function revealActiveFooter(delayMs) {
+      if (footerRevealTimer) {
+        clearTimeout(footerRevealTimer);
+      }
+      $('.tab-pane').removeClass('footer-visible');
+      footerRevealTimer = setTimeout(function() {
+        $('.tab-pane.active').addClass('footer-visible');
+      }, delayMs || 450);
+    }
+
+    // Initial reveal: poll until the active tab-pane exists in the DOM
+$(function() {
+  var tries = 0;
+  var maxTries = 75; // 15 seconds at 200ms intervals — covers any cold start
+  function tryReveal() {
+    tries++;
+    if ($('.tab-pane.active').length > 0) {
+      revealActiveFooter(150);
+    } else if (tries < maxTries) {
+      setTimeout(tryReveal, 200);
+    }
+  }
+  tryReveal();
+});
+
+// Safety net: also reveal whenever Shiny finishes any work
+$(document).on('shiny:idle', function() {
+  if ($('.tab-pane.active').length > 0 && $('.tab-pane.active.footer-visible').length === 0) {
+    revealActiveFooter(150);
+  }
+});
+
+      // Tab shown: reveal footer after a short delay and then fix Leaflet sizing
+  $(document).on('shown.bs.tab', 'a[data-toggle=\"tab\"]', function(e) {
+    revealActiveFooter(450);
+
+    setTimeout(function() {
+      $(window).trigger('resize');
+      $('.leaflet-container').each(function() {
+        var map = $(this).data('leaflet-map') || HTMLWidgets.find('#' + this.id);
+        if (map && map.getMap) {
+          map.getMap().invalidateSize();
+        }
+      });
+    }, 200);
+  });
+  "))
 )
 
 # Main UI structure
@@ -328,10 +699,23 @@ server <- function(input, output, session) {
   output$dynamic_navbar <- renderUI({
     req(language())  # Wait for language selection
 
+    # make logo button for About tab
+    about_tab <- if (language() == "fr") "À propos" else "About"
+    js_esc <- gsub("'", "\\\\'", about_tab)
+
     navbarPage(
       title = div(
         style = "display: flex; align-items: center; padding: 0; margin: 0; box-shadow: none;",
-        img(src = "logo_PB.png", style = "height: 35px; contain; padding: 0; filter: none; box-shadow: none"),
+        tags$div(
+          class = "navbar-logo-click",
+          style = "display: flex; align-items: center; cursor: pointer;",
+          title = if (language() == "fr") "Aller à À propos" else "Go to About",
+          onclick = I(sprintf("switchTabOnly('%s');", js_esc)),
+          img(
+            src = "logo_PB.png",
+            style = "height: 35px; object-fit: contain; padding: 0; filter: none; box-shadow: none"
+          )
+        ),
         span(
           if(language() == "fr") {
             "Explorateur des données nivométriques – TNO"
@@ -339,11 +723,13 @@ server <- function(input, output, session) {
             "Northwest Territories Snow Data Explorer"
           },
           class = "navbar-title-text",
-          style = "font-size: 24px; margin-left: 35px; margin-right: 35px;"
+          style = "font-size: 24px; margin-left: 35px; margin-right: 35px; cursor: pointer;",
+          onclick = I(sprintf("switchTabOnly('%s');", js_esc)),
+          title = if (language() == "fr") "Aller à À propos" else "Go to About"
         )
       ),
       id = "navbar",
-      selected = if(language() == "fr") "À propos" else "About", #default tab
+      selected = if(language() == "fr") "À propos" else "About",  # Changed to AboutModule
       header = tags$div(
         class = "language-toggle-container",
         actionButton(
@@ -353,6 +739,8 @@ server <- function(input, output, session) {
           style = "background: none; border: none; font-size: 12px; padding: 8px 12px; cursor: pointer;"
         )
       ),
+
+
       tabPanel(
         if(language() == "fr") "À propos" else "About",
         aboutUI("about")
@@ -375,6 +763,73 @@ server <- function(input, output, session) {
       )
     )
   })
+
+  # Render mobile side panel
+  output$mobile_side_panel <- renderUI({
+    req(language())
+    lang <- language()
+
+    tab_names <- if(lang == "fr") {
+      list(
+        c("À propos", "À propos"),
+        c("Données Nivométriques", "Données Nivométriques"),
+        c("Télécharger", "Télécharger"),
+        c("Métadonnées", "Métadonnées"),
+        c("FAQ", "FAQ")
+      )
+    } else {
+      list(
+        c("About", "About"),
+        c("Snow Data", "Snow Data"),
+        c("Download Data", "Download Data"),
+        c("Metadata", "Metadata"),
+        c("FAQ", "FAQ")
+      )
+    }
+
+    app_title <- if(lang == "fr") {
+      "Explorateur des données nivométriques – TNO"
+    } else {
+      "Northwest Territories Snow Data Explorer"
+    }
+
+    lang_label <- if(lang == "fr") "English" else "Français"
+    contact_text <- if(lang == "fr") {
+      "NWTHydrology-HydrologieTNO@gov.nt.ca"
+    } else {
+      "NWTHydrology-HydrologieTNO@gov.nt.ca"
+    }
+
+    div(class = "mobile-side-panel", id = "side_panel",
+        div(class = "side-panel-header",
+            span(if(lang == "fr") "Menu" else "Menu"),
+            tags$button(class = "side-panel-close", onclick = "toggleMobileMenu()",
+                        HTML("&times;"))
+        ),
+        div(class = "side-panel-title", app_title),
+        div(class = "side-panel-nav",
+            lapply(tab_names, function(tab) {
+              tags$a(
+                href = "javascript:void(0)",
+                `data-tab` = tab[1],
+                onclick = sprintf("mobileSwitchTab('%s')", gsub("'", "\\\\'", tab[1])),
+                tab[2]
+              )
+            }),
+            tags$a(
+              href = "javascript:void(0)",
+              onclick = "Shiny.setInputValue('toggle_language', Math.random()); toggleMobileMenu();",
+              style = "color: #0066cc; font-weight: bold;",
+              lang_label
+            )
+        ),
+        div(class = "side-panel-footer",
+            div(paste0("Version ", app_version)),
+            div(class = "side-contact", contact_text)
+        )
+    )
+  })
+
 
   # render contact bar including version number dynamically
   output$dynamic_contact_bar <- renderUI({

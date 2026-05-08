@@ -10,6 +10,20 @@ load_github_rdsshp <- function(filename) {
   data
 }
 
+# Function for footer_curve - About, Download and FAQ tabs
+footer_curve_ui <- function() {
+  tags$div(
+    class = "tab-footer-curve-stack",
+    tags$hr(class = "tab-footer-curve-rule"),
+    # Background image: narrow width shows centre slice; widen to reveal L/R edges
+    tags$div(
+      class = "tab-footer-curve-crop",
+      role = "img",
+      `aria-hidden` = "true"
+    )
+  )
+}
+
 # Welcome popup content for snowModule
 create_welcome_content <- function(lang) {
   if(lang == "fr") {

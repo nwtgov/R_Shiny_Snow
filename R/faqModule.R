@@ -2,6 +2,8 @@
 # UI function
 faqUI <- function(id) {
   ns <- NS(id)
+
+  tagList(
   fluidPage(
     tags$head(
       tags$style(HTML("
@@ -154,15 +156,12 @@ faqUI <- function(id) {
     ),
 
     div(class = "faq-container",
-        # FAQ Title
         uiOutput(ns("faq_title")),
-
-        # FAQ Introduction
         uiOutput(ns("faq_intro")),
-
-        # FAQ
         uiOutput(ns("faq_content"))
     )
+  ),
+  footer_curve_ui()
   )
 }
 
