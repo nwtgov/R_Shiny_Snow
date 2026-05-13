@@ -313,8 +313,7 @@ mainUI <- fluidPage(
   .mobile-overlay.open {
     display: block;
   }
-
-  /* Full-bleed footer (hr + curve): tab content is narrower than viewport — break out to 100vw like navbar */
+ /* Full-bleed footer (hr + curve): tab content is narrower than viewport — break out to 100vw like navbar */
   .tab-footer-curve-stack {
     width: 100vw;
     max-width: 100vw;
@@ -329,21 +328,21 @@ mainUI <- fluidPage(
   }
   .tab-footer-curve-stack .tab-footer-curve-rule {
     border: 0;
-    border-top: 3px solid #2699D5;
+    border-top: 4px solid #2699D5;
     margin: 0;
     width: 100%;
   }
   /* Footer curve: fixed band height; background-size height % zooms vertically (higher % = wider drawn bitmap = more horizontal crop on narrow windows) */
   .tab-footer-curve-stack .tab-footer-curve-crop {
     width: 100%;
-    margin: 10px 0 0 0;
+    margin: 0 0 0 0;
     overflow: hidden;
-    height: 220px;
+    height: 260px;
     box-sizing: border-box;
     background-image: url('footer_curve.png');
     background-repeat: no-repeat;
     background-position: center top;
-    background-size: auto 220%;
+    background-size: auto 180%;
     line-height: 0;
   }
   .tab-footer-curve-stack {
@@ -355,7 +354,6 @@ mainUI <- fluidPage(
   opacity: 1;
   visibility: visible;
 }
-
 
   /* ===== Mobile media query ===== */
   @media (max-width: 768px) {
@@ -485,7 +483,7 @@ mainUI <- fluidPage(
     }
         .tab-footer-curve-stack {
       padding-bottom: 0;
-      margin-top: 20px;
+      margin-top: 10px;
     }
   }
 
@@ -829,7 +827,6 @@ server <- function(input, output, session) {
         )
     )
   })
-
 
   # render contact bar including version number dynamically
   output$dynamic_contact_bar <- renderUI({

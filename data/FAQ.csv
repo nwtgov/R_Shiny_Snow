@@ -39,7 +39,27 @@ data,Where can I download mean daily data?,"<p>Mean daily snow depth and snow wa
 data,Where can I read the full data disclaimer and terms of use,"<p>See the Data Disclaimer and Terms of Use section in the <a href='https://doi.org/10.46887/2025-005' target='_blank'> Open Data Report (2025). </a> </p>
 <p> A stand-alone PDF of the report is available <a href=""NWT Open Report 2025-005.pdf"" target=""_blank"">here</a> for quick access.",Où puis-je lire l’avis de non-responsabilité et les conditions d’utilisation complets?,"<p>Veuillez consulter les sections Avis de non-responsabilité et Conditions d’utilisation dans le <a href='https://doi.org/10.46887/2025-005' target='_blank'> Rapport sur les données ouvertes (2025). </a> </p>
 <p> Un PDF autonome du rapport est également disponible <a href=""NWT Open Report 2025-005.pdf"" target=""_blank"">ici</a> pour un accès rapide. </p>"
-methods_sites,How are snow surveys conducted?,"Snow depth and snow water equivalent (SWE) are measured manually at ten points spaced about 10 m apart along a transect at each site. This transect is also referred to as the snow survey. Snow samples are collected using snow tubes, then weighed using a calibrated scale. Snow depth is measured using a snow tube or ruler. More details can be found in the ""Methods"" section of the <a href='https://doi.org/10.46887/2025-005' target='_blank'> Open Data Report (2025). </a>",Comment les relevés de neige sont-ils effectués?,"La profondeur de neige et l'quivalent en eau de la neige (EEN) sont mesurées manuellement à dix points espacés d'environ 10 m le long d'un transect à chaque site. Ce transect est aussi appelé le relevé nivométrique. Des prélèvements de neige sont effectués à l’aide de tubes à neige, puis pesés à l'aide d'une balance calibrée. La profondeur de la neige est mesurée à l'aide d'un tube à neige ou d'une règle graduée. Pour plus de détails, consultex la section « Méthodes » du <a href='https://doi.org/10.46887/2025-005' target='_blank'> Rapport sur les données ouvertes (2025). </a>"
+methods_sites,How are snow surveys conducted?,"Snow depth and snow water equivalent (SWE) are measured manually at ten points spaced about 10 m apart along a transect at each site. This transect is also referred to as the snow survey. Snow samples are collected using snow tubes, then weighed using a calibrated scale. Snow depth is measured using a snow tube or ruler. More details can be found in the ""Methods"" section of the <a href='https://doi.org/10.46887/2025-005' target='_blank'> Open Data Report (2025). </a>
+<figure style=""margin: 12px 0 0 0; max-width: 100%;"">
+  <img
+    src=""SWE_Anglo.jpg""
+    alt=""Snow survey illustration""
+    style=""max-width: 100%; height: auto; display: block;""
+  />
+  <figcaption style=""font-size: 0.9em; color: #555; margin-top: 8px;"">
+    Illustration © Alison McCreesh
+  </figcaption>
+</figure>",Comment les relevés de neige sont-ils effectués?,"La profondeur de neige et l'quivalent en eau de la neige (EEN) sont mesurées manuellement à dix points espacés d'environ 10 m le long d'un transect à chaque site. Ce transect est aussi appelé le relevé nivométrique. Des prélèvements de neige sont effectués à l’aide de tubes à neige, puis pesés à l'aide d'une balance calibrée. La profondeur de la neige est mesurée à l'aide d'un tube à neige ou d'une règle graduée. Pour plus de détails, consultex la section « Méthodes » du <a href='https://doi.org/10.46887/2025-005' target='_blank'> Rapport sur les données ouvertes (2025). </a>
+<figure style=""margin: 12px 0 0 0; max-width: 100%;"">
+  <img
+    src=""SWE_Franco.jpg""
+    alt=""Snow survey illustration""
+    style=""max-width: 100%; height: auto; display: block;""
+  />
+  <figcaption style=""font-size: 0.9em; color: #555; margin-top: 8px;"">
+    Illustration © Alison McCreesh
+  </figcaption>
+</figure>"
 methods_sites,How often are snow surveys conducted?,"Snow surveys are typically conducted each year from mid-to-late March, before spring snowmelt begins. For sites where snow accumulates later, such as in the Beaufort-Delta region, surveys are performed in April. ",À quelle fréquence les relevés de neige sont-ils effectués?,"Les relevés de neige sont généralement effectués chaque année, entre la mi et la fin mars, avant le début de la fonte printanière. Pour les sites où l’accumulation de neige se fait plus tard, comme dans la région du delta du Beaufort, les relevés sont réalisés en avril."
 methods_sites,How were snow survey sites selected?,"Most snow survey sites were established in upland areas near lakes, including forested and tundra locations, away from human activity. Some transects were relocated years later to avoid snow drift measurement errors or wildfire damage. Transects typically follow a straight line or 'u-shaped’ pattern.",Comment les sites de relevés de neige ont-ils été sélectionnés?,"La plupart des sites des relevés nivométriques ont été établis dans des zones élevées (terrestres) près de lacs, incluant des milieux forestiers et de toundra, éloignés de l’activité humaine. Certains transects ont été déplacés quelques années plus tard pour éviter les erreurs de mesure causées par les congères ou les dommages liés aux feux de forêt. Les transects suivent généralement une ligne droite ou une forme de «U»."
 methods_sites,Are any measurements taken directly on lakes?,"Snow depth and snow water equivalent (SWE) measurements on lakes started in 2018 and are available at many remote sites in the North Slave region. Lake survey data are listed in separate tables from upland surveys. These can be viewed in the <a href='https://doi.org/10.46887/2025-005' target='_blank'> Open Data Report (2025). </a>
@@ -62,8 +82,26 @@ map,"What is the ""Last Updated"" date on the map?",This date indicates when dat
 Veuillez noter qu’elle ne correspond pas à la dernière mise à jour de l’explorateur elle-même."
 map,What are the basins outlined on the map?,Basins represent major drainage areas. You can toggle basin boundaries on and off using map controls by clicking the layers icon in the top right of the map.,Que représentent les bassins délimités sur la carte?,Les bassins représentent les principales zones de drainage. Vous pouvez afficher ou masquer leurs limites en cliquant sur l’icône des couches dans le coin supérieur droit de la carte.
 map,What is Snow Water Equivalent (SWE)?,"Snow Water Equivalent (SWE) is the depth of water available within a snowpack, usually expressed in mm. End-of-season SWE represents the maximum water availability resulting from snowmelt during the spring.
-",C'est quoi l’équivalent en eau de la neige (EEN)?,"L’équivalent en eau de la neige (EEN) correspond à la profondeur d'eau contenue dans le manteau neigeux, généralement exprimée en millimètres (mm). L'EEN de fin de saison représente la quantité maximale d'eau disponsible provenant de la fonte de la neige au printemps.
-
+<figure style=""margin: 12px 0 0 0; max-width: 100%;"">
+  <img
+    src=""SWE_Anglo.jpg""
+    alt=""Snow survey illustration""
+    style=""max-width: 100%; height: auto; display: block;""
+  />
+  <figcaption style=""font-size: 0.9em; color: #555; margin-top: 8px;"">
+    Illustration © Alison McCreesh
+  </figcaption>
+</figure>",C'est quoi l’équivalent en eau de la neige (EEN)?,"L’équivalent en eau de la neige (EEN) correspond à la profondeur d'eau contenue dans le manteau neigeux, généralement exprimée en millimètres (mm). L'EEN de fin de saison représente la quantité maximale d'eau disponsible provenant de la fonte de la neige au printemps.
+<figure style=""margin: 12px 0 0 0; max-width: 100%;"">
+  <img
+    src=""SWE_Franco.jpg""
+    alt=""Snow survey illustration""
+    style=""max-width: 100%; height: auto; display: block;""
+  />
+  <figcaption style=""font-size: 0.9em; color: #555; margin-top: 8px;"">
+    Illustration © Alison McCreesh
+  </figcaption>
+</figure>
 "
 map,How are the data summarised on the interactive map?,"The interactive map displays Snow Water Equivalent (SWE) values summarized as a percentage of the long-term average for each site, based on the year selected. These values are calculated from the snow survey measurements after applying the quality control procedures described in the <a href='https://doi.org/10.46887/2025-005' target='_blank'> Open Data Report (2025). </a>",Comment les données sont-elles résumées sur la carte interactive?,"La carte interactive présente les valeurs de l’équivalent en eau de la neige (EEN) sous forme de pourcentage de la moyenne à long terme pour chaque site, selon l’année sélectionnée. Ces valeurs sont calculées à partir des mesures de terrain après l’application des contrôles de qualité décrits dans le <a href='https://doi.org/10.46887/2025-005' target='_blank'> Rapport sur les données ouvertes (2025). </a>"
 other,What is the Open Data Report (2025) and how can I access it?,"<p>The <a href='https://doi.org/10.46887/2025-005' target='_blank'> Open Data Report (2025) </a>  referenced in this Explorer is titled “Northwest Territories Snow Survey Data and Methodology, 1965–2024”. It is an open data publication, prepared by the Department of Environment and Climate Change (ECC) and the Northwest Territories Geological Survey (NTGS), and contains snow survey data collected across the Northwest Territories between 1965 and 2024. The report includes mean daily and point snow survey data, snow survey methodology, data quality control processes, and site metadata. This Explorer includes the same information, with the addition of more recent (2024-present) snow survey data.</p>
