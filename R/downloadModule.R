@@ -94,7 +94,7 @@ downloadUI <- function(id) {
         uiOutput(ns("column_modal_content"))
     )
   ),
-  footer_curve_ui()
+  uiOutput(ns("footer_curve"))
   )
 }
 
@@ -135,6 +135,10 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
       create_instrument_modal_content(language())
     })
 
+    output$footer_curve <- renderUI({
+      req(language())
+      footer_curve_ui(language())
+    })
 
     # download controls
     output$download_controls <- renderUI({

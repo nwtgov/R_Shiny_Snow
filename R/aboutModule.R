@@ -110,7 +110,7 @@ aboutUI <- function(id) {
       style = "padding: 20px; max-width: 900px; margin: 0 auto;",
       uiOutput(ns("about_content"))
     ),
-    footer_curve_ui()
+    uiOutput(ns("footer_curve"))
   )
 }
 
@@ -120,6 +120,11 @@ aboutServer <- function(id, language) {
     output$about_content <- renderUI({
       req(language())
       create_about_content(language())
+    })
+
+    output$footer_curve <- renderUI({
+      req(language())
+      footer_curve_ui(language())
     })
   })
 }

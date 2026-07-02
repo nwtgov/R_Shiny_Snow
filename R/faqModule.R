@@ -161,7 +161,7 @@ faqUI <- function(id) {
         uiOutput(ns("faq_content"))
     )
   ),
-  footer_curve_ui()
+  uiOutput(ns("footer_curve"))
   )
 }
 
@@ -170,6 +170,11 @@ faqServer <- function(id, first_visits, language, app_version) {
   moduleServer(id, function(input, output, session) {
 
     setup_info_panel_server(input, output, session, language)
+
+    output$footer_curve <- renderUI({
+      req(language())
+      footer_curve_ui(language())
+    })
 
     # Load FAQ data
     faq_data_raw <- reactive({

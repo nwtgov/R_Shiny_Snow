@@ -24,6 +24,10 @@ mainUI <- fluidPage(
   useShinyjs(),
   use_waiter(),
   tags$head(
+    tags$link(
+      rel = "stylesheet",
+      href = "https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap"
+    ),
     tags$style(HTML("
           body::after {
             content: '';
@@ -313,7 +317,10 @@ mainUI <- fluidPage(
   .mobile-overlay.open {
     display: block;
   }
- /* Full-bleed footer (hr + curve): tab content is narrower than viewport — break out to 100vw like navbar */
+
+
+  /* ===== GNWT site footer (curve + dark band) ===== */
+  .site-footer.tab-footer-curve-stack,
   .tab-footer-curve-stack {
     width: 100vw;
     max-width: 100vw;
@@ -325,35 +332,167 @@ mainUI <- fluidPage(
     overflow-x: clip;
     overflow-y: visible;
     position: relative;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.12s linear;
   }
-  .tab-footer-curve-stack .tab-footer-curve-rule {
-    border: 0;
-    border-top: 4px solid #2699D5;
-    margin: 0;
-    width: 100%;
+
+  .tab-pane.active.footer-visible .tab-footer-curve-stack {
+    opacity: 1;
+    visibility: visible;
   }
-  /* Footer curve: fixed band height; background-size height % zooms vertically (higher % = wider drawn bitmap = more horizontal crop on narrow windows) */
-  .tab-footer-curve-stack .tab-footer-curve-crop {
-    width: 100%;
-    margin: 0 0 0 0;
+
+.site-footer__graphic {
+  width: 100%;
+  line-height: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.site-footer__curve {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+  .site-footer__content {
+    position: relative;
+    z-index: 2;
+    background-color: #001F30;
+    color: #f5f5f5;
+    margin-top: calc(-1 * min(5vw, 80px));
     overflow: hidden;
-    height: 260px;
-    box-sizing: border-box;
-    background-image: url('footer_curve.png');
-    background-repeat: no-repeat;
-    background-position: center top;
-    background-size: auto 180%;
-    line-height: 0;
+    padding-bottom: 33px;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
   }
-  .tab-footer-curve-stack {
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.12s linear;
+
+  .site-footer__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding-left: 32px;
+    padding-right: 32px;
+    box-sizing: border-box;
+
+  }
+
+  /* Links on dark band */
+  .site-footer__content .gnwt-footer-links {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    flex: 1 1 auto;
+  }
+
+  .site-footer__content .gnwt-footer-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+    font-family: Arial, sans-serif;
+    font-size: 17px;
+    font-weight: bold;
+    text-decoration: none;
+    padding: 8px 16px;
+    white-space: nowrap;
+    border: none;
+    background: transparent;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .site-footer__content .gnwt-footer-link:hover,
+  .site-footer__content .gnwt-footer-link:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: inherit;
+    text-decoration: none;
+    outline: none;
+  }
+
+  .site-footer__content .gnwt-footer-link + .gnwt-footer-link {
+    border-left: none;
+  }
+
+  /* Branding (clickable text) */
+  .site-footer__branding {
+    flex: 0 0 auto;
+  }
+
+  .site-footer__brand {
+    color: inherit;
+    text-decoration: none;
+    display: inline-block;
+    text-align: right;
+    line-height: 1.15;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+  }
+
+  .site-footer__brand:hover,
+  .site-footer__brand:focus {
+    color: inherit;
+    text-decoration: none;
+    background-color: rgba(255, 255, 255, 0.12);
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+  }
+
+  .site-footer__brand-line--small {
+    font-family: Calibri, sans-serif;
+    font-size: 16px;
+    font-weight: 355;
+    letter-spacing: 0.02em;
+  }
+
+  .site-footer__brand-line--large {
+    font-family: Candara, sans-serif;
+    font-size: 22px;
+    font-weight: 355;
+    letter-spacing: 0.01em;
+  }
+
+
+  /* ===== Footer on medium sized screen ===== */
+@media (min-width: 769px) and (max-width: 980px) {
+
+  .site-footer__inner {
+    flex-wrap: nowrap;
+    align-items: center;   /* branding aligns to top of multi-row links */
+    min-height: auto;
+  }
+
+  .site-footer__content .gnwt-footer-links {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: calc(100% - 240px);
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 10px;
+    row-gap: 10px;
+    flex-direction: row;
+  }
+
+  .site-footer__branding {
+    flex: 0 0 auto;
+    align-self: center;        /* or flex-start — tune vertical position beside wrapped links */
+    margin-left: auto;         /* keep branding on the right */
+  }
 }
-.tab-pane.active.footer-visible .tab-footer-curve-stack {
-  opacity: 1;
-  visibility: visible;
-}
+
+
 
   /* ===== Mobile media query ===== */
   @media (max-width: 768px) {
@@ -484,8 +623,44 @@ mainUI <- fluidPage(
         .tab-footer-curve-stack {
       padding-bottom: 0;
       margin-top: 10px;
+        }
+
+    /* GNWT footer — mobile */
+    .site-footer__content {
+      align-items: stretch;      /* stop single-row vertical centering */
+      min-height: auto;          /* let the bar grow taller */
+      padding-top: 1.25rem;
     }
+
+    .site-footer__inner {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .site-footer__content .gnwt-footer-links {
+      flex-direction: row;
+      flex-wrap: wrap;
+      width: 100%
+    }
+
+    .site-footer__branding {
+      width: 100%;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.35);
+      text-align: right;
+      align-self: stretch;
+    }
+
+    .site-footer__brand {
+      text-align: right;
+      width: auto;
+      display: inline-block;
+    }
+
   }
+
+
 
           "))
   ),
@@ -625,6 +800,8 @@ server <- function(input, output, session) {
     })
     w$hide()
   })
+
+
 
   # reactive vals to track first visits and current tab
   first_visits <- reactiveValues(

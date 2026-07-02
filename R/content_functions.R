@@ -10,19 +10,118 @@ load_github_rdsshp <- function(filename) {
   data
 }
 
-# Function for footer_curve - About, Download and FAQ tabs
-footer_curve_ui <- function() {
+# Function for footer links
+
+gnwt_footer_graphic <- function() {
   tags$div(
-    class = "tab-footer-curve-stack",
-    tags$hr(class = "tab-footer-curve-rule"),
-    # Background image: narrow width shows centre slice; widen to reveal L/R edges
-    tags$div(
-      class = "tab-footer-curve-crop",
-      role = "img",
+    class = "site-footer__graphic",
+    tags$img(
+      src = "footer_curve_new2.svg",
+      class = "site-footer__curve",
+      alt = "",
       `aria-hidden` = "true"
     )
   )
 }
+
+gnwt_footer_links <- function(lang = "en") {
+  links <- if (lang == "fr") {
+    list(
+      phone        = c("Répertoire téléphonique", "http://rdirectory.gov.nt.ca/rDirectory.aspx"),
+      terms        = c("Modalités d'utilisation", "https://www.gov.nt.ca/en/terms"),
+      accessibility = c("Accessibilité", "https://www.gov.nt.ca/accessibility/"),
+      contact      = c("Contact", "https://www.gov.nt.ca/contact-gnwt"),
+      news         = c("Nouvelles", "https://www.gov.nt.ca/newsroom")
+    )
+  } else {
+    list(
+      phone        = c("Phone Directory", "http://rdirectory.gov.nt.ca/rDirectory.aspx"),
+      terms        = c("Terms of use", "https://www.gov.nt.ca/en/terms"),
+      accessibility = c("Accessibility", "https://www.gov.nt.ca/accessibility/"),
+      contact      = c("Contact", "https://www.gov.nt.ca/contact-gnwt"),
+      news         = c("News", "https://www.gov.nt.ca/newsroom")
+    )
+  }
+
+  tags$nav(
+    class = "gnwt-footer-links",
+    `aria-label` = if (lang == "fr") "Liens du pied de page" else "Footer links",
+    lapply(names(links), function(id) {
+      tags$a(
+        href = links[[id]][2],
+        class = paste("gnwt-footer-link", paste0("gnwt-footer-link--", id)),
+        links[[id]][1]
+      )
+    })
+  )
+}
+
+
+gnwt_footer_branding <- function(lang = "en") {
+  if (lang == "fr") {
+    line_small <- "Gouvernement des"
+    line_large <- "Territoires du Nord-Ouest"
+  } else {
+    line_small <- "Government of"
+    line_large <- "Northwest Territories"
+  }
+
+  tags$div(
+    class = "site-footer__branding",
+    tags$a(
+      href = "https://www.gov.nt.ca/",
+      class = "site-footer__brand",
+      tags$div(class = "site-footer__brand-line site-footer__brand-line--small", line_small),
+      tags$div(class = "site-footer__brand-line site-footer__brand-line--large", line_large)
+    )
+  )
+}
+
+gnwt_footer_ui <- function(lang = "en") {
+  tags$footer(
+    class = "site-footer tab-footer-curve-stack",
+    gnwt_footer_graphic(),
+    tags$div(
+      class = "site-footer__content",
+      tags$div(
+        class = "site-footer__inner",
+        gnwt_footer_links(lang),
+        gnwt_footer_branding(lang)
+      )
+    )
+  )
+}
+
+footer_curve_ui <- function(lang = "en") {
+  gnwt_footer_ui(lang)
+}
+
+#
+# footer_curve_ui <- function(lang = "en") {
+#   tags$footer(
+#     class = "site-footer tab-footer-curve-stack",
+#
+#     # 1) Curve band (top)
+#     tags$div(
+#       class = "site-footer__graphic",
+#       tags$div(class = "site-footer__curve")  # uses footer_curve.png for now
+#     ),
+#
+#     # 2) Dark content band (links + room for logo later)
+#     tags$div(
+#       class = "site-footer__content",
+#       tags$div(
+#         class = "site-footer__inner",
+#         gnwt_footer_links(lang),
+#         tags$div(
+#           class = "site-footer__branding",
+#           # Phase 2: logo + "Government of Northwest Territories"
+#         )
+#       )
+#     )
+#   )
+# }
+
 
 # Welcome popup content for snowModule
 create_welcome_content <- function(lang) {
