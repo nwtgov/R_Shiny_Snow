@@ -115,8 +115,7 @@ metadataUI <- function(id) {
       ),
       # Conditional UI for year selection
       uiOutput(ns("year_selector_ui"))
-    ),
-    create_info_panel_UI(ns)
+    )
   )
 }
 
@@ -126,12 +125,19 @@ metadataServer <- function(id, language, preloaded_data) {
 
     # Hide map loading spinner once the map finishes rendering
     ns <- session$ns
+
+    # add spinner waiter for map loading or if lang changes
+    observeEvent(language(), {
+      shinyjs::runjs(sprintf("$('#%s').show();", ns("map_loading")))
+      shinyjs::runjs(sprintf(
+        "setTimeout(function(){ $('#%s').fadeOut(300); }, 12000);",
+        ns("map_loading")
+      ))
+    }, ignoreInit = TRUE)
+
     observeEvent(input$metadata_map_bounds, {
       shinyjs::runjs(sprintf("$('#%s').fadeOut(300);", ns("map_loading")))
-    }, once = TRUE)
-
-        # for info panel / welcome modal keep info
-    setup_info_panel_server(input, output, session, language)
+    })
 
     # DATA LOADING
     # load shapefiles
@@ -144,6 +150,13 @@ metadataServer <- function(id, language, preloaded_data) {
       peel <- preloaded_data()$peel
       hay <- preloaded_data()$hay
       liard <- preloaded_data()$liard
+      lamartre <- preloaded_data()$lamartre
+      willow <- preloaded_data()$willow
+      camsell <- preloaded_data()$camsell
+      greatbear <- preloaded_data()$greatbear
+      arcticred <- preloaded_data()$arcticred
+      hareind <- preloaded_data()$hareind
+      taltson <- preloaded_data()$taltson
     } else {
       nwt_boundary <- load_github_rdsshp("NWT_ENR_BND_FND.rds")
       mackenzie_basin <- load_github_rdsshp("MackenzieRiverBasin_FDA.rds")
@@ -153,6 +166,13 @@ metadataServer <- function(id, language, preloaded_data) {
       peel <- load_github_rdsshp("10MC002_DrainageBasin_BassinDeDrainage.rds")
       hay <- load_github_rdsshp("07OB001_DrainageBasin_BassinDeDrainage.rds")
       liard <- load_github_rdsshp("10ED002_DrainageBasin_BassinDeDrainage.rds")
+      lamartre <- load_github_rdsshp("07TA001_DrainageBasin_BassinDeDrainage.rds")
+      willow <- load_github_rdsshp("10GB006_DrainageBasin_BassinDeDrainage.rds")
+      camsell <- load_github_rdsshp("10JA002_DrainageBasin_BassinDeDrainage.rds")
+      greatbear <- load_github_rdsshp("10JC003_DrainageBasin_BassinDeDrainage.rds")
+      arcticred <- load_github_rdsshp("10LA002_DrainageBasin_BassinDeDrainage.rds")
+      hareind <- load_github_rdsshp("10LD004_DrainageBasin_BassinDeDrainage.rds")
+      taltson <- load_github_rdsshp("07QA001_DrainageBasin_BassinDeDrainage.rds")
     }
     # load data and update site names if preload fails
     if (!is.null(preloaded_data()$md_3)) {
@@ -300,7 +320,14 @@ filtered_sites <- reactive({
             YKriver = "Bassin de la rivière Yellowknife",
             peel = "Bassin de la rivière Peel",
             hay = "Bassin de la rivière au Foin",
-            liard = "Bassin de la rivière Liard"
+            liard = "Bassin de la rivière Liard",
+            lamartre = "Bassin de la rivière La Martre",
+            willow = "Bassin de la rivière Willowlake",
+            camsell = "Bassin de la rivière Camsell",
+            greatbear = "Bassin du lac Great Bear",
+            arcticred = "Bassin de la rivière Arctic Red",
+            hareind = "Bassin de la rivière Hare Indian",
+            taltson = "Bassin de la rivière Taltson"
           ),
           base_maps = list(
             cartodb = "Carte Simple",
@@ -343,7 +370,14 @@ filtered_sites <- reactive({
             YKriver = "Yellowknife River Basin",
             peel = "Peel Basin",
             hay = "Hay Basin",
-            liard = "Liard Basin"
+            liard = "Liard Basin",
+            lamartre = "La Martre River Basin",
+            willow = "Willowlake Basin",
+            camsell = "Camsell River Basin",
+            greatbear = "Great Bear Lake Basin",
+            arcticred = "Arctic Red River Basin",
+            hareind = "Hare Indian River Basin",
+            taltson = "Taltson River Basin"
           ),
           base_maps = list(
             cartodb = "Simple Map",
@@ -515,6 +549,13 @@ filtered_sites <- reactive({
           addPolylines(data = peel, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$peel) %>%
           addPolylines(data = hay, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hay) %>%
           addPolylines(data = liard, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$liard) %>%
+          addPolylines(data = lamartre, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$lamartre) %>%
+          addPolylines(data = willow, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$willow) %>%
+          addPolylines(data = camsell, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$camsell) %>%
+          addPolylines(data = greatbear, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$greatbear) %>%
+          addPolylines(data = arcticred, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$arcticred) %>%
+          addPolylines(data = hareind, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hareind) %>%
+          addPolylines(data = taltson, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$taltson) %>%
           addCircleMarkers(
             data = meta_df,
             color = "black",
@@ -528,7 +569,8 @@ filtered_sites <- reactive({
             popupOptions = popupOptions(autoPan = TRUE)
             )%>%
           addLayersControl(
-            overlayGroups = c(map_text()$basins$nwt_boundary,map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$snare, map_text()$basins$YKriver,map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay),
+            overlayGroups = c(map_text()$basins$nwt_boundary,map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$snare, map_text()$basins$YKriver,map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay,
+                              map_text()$basins$lamartre, map_text()$basins$willow, map_text()$basins$camsell, map_text()$basins$greatbear, map_text()$basins$arcticred, map_text()$basins$hareind,map_text()$basins$taltson),
             baseGroups = c(map_text()$base_maps$cartodb, map_text()$base_maps$esri),
             options = layersControlOptions(collapsed = TRUE)
           )
@@ -574,24 +616,28 @@ filtered_sites <- reactive({
     })
     # sub-basins toggled off by default
     observe({
-      # Trigger when map is ready OR when year changes (map re-renders)
       req(map_text())
-      # isolate (to prevent infinite loops)
-      isolate({
-        map_text <- map_text()
-        # Small delay to ensure map is fully rendered
-        Sys.sleep(0.1)
-        leafletProxy(session$ns("metadata_map"), session) %>%
-          hideGroup(c(
-            map_text()$basins$slave,
-            map_text()$basins$snare,
-            map_text()$basins$YKriver,
-            map_text()$basins$liard,
-            map_text()$basins$peel,
-            map_text()$basins$hay
-          ))
-      })
+      req(filtered_sites())
+      req(input$metadata_map_bounds)  # ensures widget exists / has rendered
+
+      leafletProxy(session$ns("metadata_map"), session) %>%
+        hideGroup(c(
+          map_text()$basins$slave,
+          map_text()$basins$snare,
+          map_text()$basins$YKriver,
+          map_text()$basins$liard,
+          map_text()$basins$peel,
+          map_text()$basins$hay,
+          map_text()$basins$lamartre,
+          map_text()$basins$willow,
+          map_text()$basins$camsell,
+          map_text()$basins$greatbear,
+          map_text()$basins$arcticred,
+          map_text()$basins$hareind,
+          map_text()$basins$taltson
+        ))
     })
+
 
   })
 }

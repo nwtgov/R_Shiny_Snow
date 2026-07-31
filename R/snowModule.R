@@ -101,12 +101,19 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
 
     # Hide map loading spinner once the map finishes rendering
     ns <- session$ns
+
+    # add spinner waiter for map loading or if lang changes
+    observeEvent(language(), {
+      shinyjs::runjs(sprintf("$('#%s').show();", ns("map_loading")))
+      shinyjs::runjs(sprintf(
+        "setTimeout(function(){ $('#%s').fadeOut(300); }, 12000);",
+        ns("map_loading")
+      ))
+    }, ignoreInit = TRUE)
+
     observeEvent(input$snow_map_bounds, {
       shinyjs::runjs(sprintf("$('#%s').fadeOut(300);", ns("map_loading")))
-    }, once = TRUE)
-
-    # for info panel / welcome modal keep info
-    setup_info_panel_server(input, output, session, language)
+    })
 
     # DATA LOADING
     # load shapefiles
@@ -119,6 +126,15 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
       peel <- preloaded_data()$peel
       hay <- preloaded_data()$hay
       liard <- preloaded_data()$liard
+      lamartre <- preloaded_data()$lamartre
+      willow <- preloaded_data()$willow
+      camsell <- preloaded_data()$camsell
+      greatbear <- preloaded_data()$greatbear
+      arcticred <- preloaded_data()$arcticred
+      hareind <- preloaded_data()$hareind
+      taltson <- preloaded_data()$taltson
+
+
     } else {
       nwt_boundary <- load_github_rdsshp("NWT_ENR_BND_FND.rds")
       mackenzie_basin <- load_github_rdsshp("MackenzieRiverBasin_FDA.rds")
@@ -128,6 +144,14 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
       peel <- load_github_rdsshp("10MC002_DrainageBasin_BassinDeDrainage.rds")
       hay <- load_github_rdsshp("07OB001_DrainageBasin_BassinDeDrainage.rds")
       liard <- load_github_rdsshp("10ED002_DrainageBasin_BassinDeDrainage.rds")
+
+      lamartre <- load_github_rdsshp("07TA001_DrainageBasin_BassinDeDrainage.rds")
+      willow <- load_github_rdsshp("10GB006_DrainageBasin_BassinDeDrainage.rds")
+      camsell <- load_github_rdsshp("10JA002_DrainageBasin_BassinDeDrainage.rds")
+      greatbear <- load_github_rdsshp("10JC003_DrainageBasin_BassinDeDrainage.rds")
+      arcticred <- load_github_rdsshp("10LA002_DrainageBasin_BassinDeDrainage.rds")
+      hareind <- load_github_rdsshp("10LD004_DrainageBasin_BassinDeDrainage.rds")
+      taltson <- load_github_rdsshp("07QA001_DrainageBasin_BassinDeDrainage.rds")
     }
 
     # load df if preload fails
@@ -148,11 +172,18 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
     available_years <- sort(unique(md_3$year), decreasing = TRUE)
 
     # display consistent legend bins
+    bin_colours <- c(
+      "> 151%"      = "#4575B4",
+      "131 - 150%"  = "#91BFDB",
+      "111 - 130%"  = "#E0F3F8",
+      "91 - 110%"   = "#FFFFBF",
+      "71 - 90%"    = "#FEE090",
+      "51 - 70%"    = "#FC8D59",
+      "< 50%"       = "#D73027"
+    )
     all_legend_bins <- factor(
-      c("< 50%", "51 - 70%", "71 - 90%", "91 - 110%",
-        "111 - 130%", "131 - 150%", "> 151%"),
-      levels = c("< 50%", "51 - 70%", "71 - 90%", "91 - 110%",
-                 "111 - 130%", "131 - 150%", "> 151%"),
+      names(bin_colours),
+      levels = names(bin_colours),
       ordered = TRUE
     )
 
@@ -176,7 +207,15 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
             YKriver = "Bassin de la rivière Yellowknife",
             peel = "Bassin de la rivière Peel",
             hay = "Bassin de la rivière au Foin",
-            liard = "Bassin de la rivière Liard"
+            liard = "Bassin de la rivière Liard",
+
+            lamartre = "Bassin de la rivière La Martre",
+            willow = "Bassin de la rivière Willowlake",
+            camsell = "Bassin de la rivière Camsell",
+            greatbear = "Bassin du lac Great Bear",
+            arcticred = "Bassin de la rivière Arctic Red",
+            hareind = "Bassin de la rivière Hare Indian",
+            taltson = "Bassin de la rivière Taltson"
           ),
           base_maps = list(
             cartodb = "Carte Simple",
@@ -208,7 +247,15 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
             YKriver = "Yellowknife River Basin",
             peel = "Peel Basin",
             hay = "Hay Basin",
-            liard = "Liard Basin"
+            liard = "Liard Basin",
+
+            lamartre = "La Martre River Basin",
+            willow = "Willowlake Basin",
+            camsell = "Camsell River Basin",
+            greatbear = "Great Bear Lake Basin",
+            arcticred = "Arctic Red River Basin",
+            hareind = "Hare Indian River Basin",
+            taltson = "Taltson River Basin"
           ),
           base_maps = list(
             cartodb = "Simple Map",
@@ -331,9 +378,6 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
                                    labels = c("< 50%", "51 - 70%", "71 - 90%", "91 - 110%",
                                               "111 - 130%", "131 - 150%", "> 151%"))
 
-      PerCol <- leaflet::colorFactor(palette = "RdYlBu", df$Percent_Normal_Bin)
-      colours <- colorRampPalette(c("red", "yellow", "blue"))(n = 8)
-
       return(df)
     })
 
@@ -345,7 +389,11 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
       map_text <- isolate(map_text()) # isolate to evaluate once per render and prevent duplicate rendering
       df <- snow_data()
 
-      PerCol <- leaflet::colorFactor(palette = "RdYlBu", df$Percent_Normal_Bin)
+      PerCol <- leaflet::colorFactor(
+        palette = unname(bin_colours),
+        domain = names(bin_colours),
+        ordered = TRUE
+      )
 
       # Return empty map for years with no data
       if(nrow(df) == 0) {
@@ -362,6 +410,13 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
           addPolylines(data = peel, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$peel) %>%
           addPolylines(data = hay, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hay) %>%
           addPolylines(data = liard, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$liard) %>%
+          addPolylines(data = lamartre, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$lamartre) %>%
+          addPolylines(data = willow, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$willow) %>%
+          addPolylines(data = camsell, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$camsell) %>%
+          addPolylines(data = greatbear, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$greatbear) %>%
+          addPolylines(data = arcticred, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$arcticred) %>%
+          addPolylines(data = hareind, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hareind) %>%
+          addPolylines(data = taltson, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$taltson) %>%
           addLayersControl(
             overlayGroups = c(map_text()$basins$nwt_boundary,map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$snare, map_text()$basins$YKriver, map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay),
             baseGroups = c(map_text()$base_maps$cartodb, map_text()$base_maps$esri),
@@ -386,6 +441,14 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
           addPolylines(data = peel, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$peel) %>%
           addPolylines(data = hay, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hay) %>%
           addPolylines(data = liard, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$liard) %>%
+
+          addPolylines(data = lamartre, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$lamartre) %>%
+          addPolylines(data = willow, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$willow) %>%
+          addPolylines(data = camsell, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$camsell) %>%
+          addPolylines(data = greatbear, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$greatbear) %>%
+          addPolylines(data = arcticred, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$arcticred) %>%
+          addPolylines(data = hareind, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hareind) %>%
+          addPolylines(data = taltson, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$taltson) %>%
           addCircleMarkers(
             data = df,
             color = "black",
@@ -401,7 +464,8 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
             )
           ) %>%
           addLayersControl(
-            overlayGroups = c(map_text()$basins$nwt_boundary,map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$snare, map_text()$basins$YKriver,map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay),
+            overlayGroups = c(map_text()$basins$nwt_boundary,map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$snare, map_text()$basins$YKriver, map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay,
+                              map_text()$basins$lamartre, map_text()$basins$willow, map_text()$basins$camsell, map_text()$basins$greatbear, map_text()$basins$arcticred, map_text()$basins$hareind,map_text()$basins$taltson),
             baseGroups = c(map_text()$base_maps$cartodb, map_text()$base_maps$esri),
             options = layersControlOptions(collapsed = TRUE)
           ) %>%
@@ -440,7 +504,14 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
             map_text()$basins$YKriver,
             map_text()$basins$liard,
             map_text()$basins$peel,
-            map_text()$basins$hay
+            map_text()$basins$hay,
+            map_text()$basins$lamartre,
+            map_text()$basins$willow,
+            map_text()$basins$camsell,
+            map_text()$basins$greatbear,
+            map_text()$basins$arcticred,
+            map_text()$basins$hareind,
+            map_text()$basins$taltson
           ))
       })
     })

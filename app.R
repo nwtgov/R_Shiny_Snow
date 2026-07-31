@@ -43,13 +43,6 @@ mainUI <- fluidPage(
           .modal {
             z-index: 9999 !important;
           }
-          .welcome-modal {
-            width: 90% !important;
-            height: 90% !important;
-          }
-          .welcome-modal .modal-body {
-            overflow-y: auto;
-          }
           .navbar {
             margin-bottom: 0;
             border-radius: 0;
@@ -77,15 +70,46 @@ mainUI <- fluidPage(
             padding: 0;
           }
           .navbar-title-text{
-            margin-right: 20px;
+            margin-right: 30px;
           }
+
+                /* GNWT wordmark next to logo (footer structure, black on white) */
+        .navbar-logo-click {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          cursor: pointer;
+        }
+        .navbar-gnwt-brand {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          line-height: 1.1;
+          color: #000000;
+          text-align: left;
+          user-select: none;
+        }
+        .navbar-gnwt-brand-line--small {
+          font-family: Calibri, sans-serif;
+          font-size: 15px;
+          font-weight: 355;
+          letter-spacing: 0.01em;
+        }
+        .navbar-gnwt-brand-line--large {
+          font-family: Candara, sans-serif;
+          font-size: 20px;
+          font-weight: 500;
+          letter-spacing: 0.01em;
+        }
+
           .navbar-nav {
             background-color: #0066cc;
             height: 60px;
             padding: 0;
             display: flex;
             align-items:center !important;
-            margin: 0;
+            float: right !important;
+            margin: 0 60px 0 0;
             border: none;
             position: static !important;
           }
@@ -118,11 +142,28 @@ mainUI <- fluidPage(
             bottom: 30px;
             z-index: 1;
           }
-                    .leaflet-tooltip {
-          font-size: 16px !important;
-          font-weight: bold;
-        padding: 6px 10px !important;
-  }
+          .leaflet-tooltip {
+            font-size: 16px !important;
+            font-weight: bold;
+            padding: 6px 10px !important;
+          }
+          /* Layers control: smaller text + scroll with more basins */
+          .leaflet-control-layers {
+            font-size: 11px !important;
+            line-height: 1.25 !important;
+          }
+          .leaflet-control-layers-expanded {
+            max-height: min(55vh, 420px) !important;
+            overflow-y: auto !important;
+            padding-right: 4px;
+          }
+          .leaflet-control-layers label {
+            margin-bottom: 2px !important;
+            font-weight: normal !important;
+          }
+          .leaflet-control-layers-separator {
+            margin: 4px 0 !important;
+          }
           .floating-panel {
             background-color: #ffffff;
             padding: 20px;
@@ -184,35 +225,19 @@ mainUI <- fluidPage(
             opacity: 0.8;
             text-decoration: underline;
           }
-          .info-panel {
-            background-color: white;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
-            max-width: 300px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 2;
-            font-size: 12px;
+                    /* Full label on large screens; short on medium */
+
+
+          .lang-label-short {
             display: none;
-            position: relative;
           }
-          .close-info-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: #666;
-            cursor: pointer;
-            z-index: 10;
-            padding: 0 8px;
-            line-height: 1;
-          }
-          .close-info-btn:hover {
-            color: #000;
-            font-weight: bold;
+          @media (max-width: 980px) {
+            .lang-label-full {
+              display: none;
+            }
+            .lang-label-short {
+              display: inline;
+            }
           }
 
   /* ===== Mobile side panel ===== */
@@ -464,9 +489,55 @@ mainUI <- fluidPage(
     letter-spacing: 0.01em;
   }
 
+  /* ===== Navbar wrapping to avoid lang toggle overlapping ===== */
+/* Force nav tabs below brand before they overlap the language toggle */
+@media (max-width: 1120px) {
+  .navbar {
+    height: auto;
+    min-height: 60px;
+  }
+
+  .navbar-header {
+    float: none;
+    width: 100%;
+  }
+
+  .navbar .navbar-collapse {
+    display: flex !important;
+    justify-content: center !important;
+    float: none !important;
+    clear: both;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .navbar-nav {
+    float: none !important;
+    display: flex !important;
+    width: fit-content !important;
+    max-width: 100%;
+    margin: 0 auto !important;
+  }
+
+  .language-toggle-container {
+    top: 0;
+    height: 60px;
+  }
+}
+
 
   /* ===== Footer on medium sized screen ===== */
 @media (min-width: 769px) and (max-width: 980px) {
+
+  /* Navbar wordmark: slightly smaller on medium so it doesn't wrap */
+  .navbar-gnwt-brand-line--small {
+    font-size: 15px;
+  }
+  .navbar-gnwt-brand-line--large {
+    font-size: 20px;
+  }
+
 
   .site-footer__inner {
     flex-wrap: nowrap;
@@ -528,6 +599,17 @@ mainUI <- fluidPage(
     .navbar-brand img {
       height: 28px;
     }
+
+        .navbar-gnwt-brand-line--small {
+      font-size: 9px;
+    }
+    .navbar-gnwt-brand-line--large {
+      font-size: 12px;
+    }
+    .navbar-logo-click {
+      gap: 6px;
+    }
+
     body::after {
       top: 45px !important;
       height: 6px !important;
@@ -660,8 +742,6 @@ mainUI <- fluidPage(
 
   }
 
-
-
           "))
   ),
 
@@ -786,6 +866,14 @@ server <- function(input, output, session) {
       hay <- load_github_rdsshp("07OB001_DrainageBasin_BassinDeDrainage.rds")
       liard <- load_github_rdsshp("10ED002_DrainageBasin_BassinDeDrainage.rds")
 
+      lamartre <- load_github_rdsshp("07TA001_DrainageBasin_BassinDeDrainage.rds")
+      willow <- load_github_rdsshp("10GB006_DrainageBasin_BassinDeDrainage.rds")
+      camsell <- load_github_rdsshp("10JA002_DrainageBasin_BassinDeDrainage.rds")
+      greatbear <- load_github_rdsshp("10JC003_DrainageBasin_BassinDeDrainage.rds")
+      arcticred <- load_github_rdsshp("10LA002_DrainageBasin_BassinDeDrainage.rds")
+      hareind <- load_github_rdsshp("10LD004_DrainageBasin_BassinDeDrainage.rds")
+      taltson <- load_github_rdsshp("07QA001_DrainageBasin_BassinDeDrainage.rds")
+
       preloaded_data(list(
         nwt_boundary = nwt_boundary,
         md_3 = md_3,
@@ -795,7 +883,15 @@ server <- function(input, output, session) {
         YKriver = YKriver,
         peel = peel,
         hay = hay,
-        liard = liard
+        liard = liard,
+
+        lamartre = lamartre,
+        willow = willow,
+        camsell = camsell,
+        greatbear = greatbear,
+        arcticred = arcticred,
+        hareind = hareind,
+        taltson = taltson
         ))
     })
     w$hide()
@@ -883,22 +979,22 @@ server <- function(input, output, session) {
         style = "display: flex; align-items: center; padding: 0; margin: 0; box-shadow: none;",
         tags$div(
           class = "navbar-logo-click",
-          style = "display: flex; align-items: center; cursor: pointer;",
           title = if (language() == "fr") "Aller à À propos" else "Go to About",
           onclick = I(sprintf("switchTabOnly('%s');", js_esc)),
           img(
             src = "logo_PB.png",
             style = "height: 35px; object-fit: contain; padding: 0; filter: none; box-shadow: none"
-          )
+          ),
+          gnwt_navbar_wordmark(language())
         ),
         span(
           if(language() == "fr") {
             "Explorateur des données nivométriques – TNO"
           } else {
-            "Northwest Territories Snow Data Explorer"
+            "NWT Snow Data Explorer"
           },
           class = "navbar-title-text",
-          style = "font-size: 24px; margin-left: 35px; margin-right: 35px; cursor: pointer;",
+          style = "font-size: 20px; margin-left: 30px; margin-right: 20px; cursor: pointer;",
           onclick = I(sprintf("switchTabOnly('%s');", js_esc)),
           title = if (language() == "fr") "Aller à À propos" else "Go to About"
         )
@@ -909,7 +1005,12 @@ server <- function(input, output, session) {
         class = "language-toggle-container",
         actionButton(
           "toggle_language",
-          if(language() == "fr") "English" else "Français",
+          label = tagList(
+            tags$span(class = "lang-label-full",
+                      if (language() == "fr") "English" else "Français"),
+            tags$span(class = "lang-label-short",
+                      if (language() == "fr") "EN" else "FR")
+          ),
           class = "language-toggle-link",
           style = "background: none; border: none; font-size: 12px; padding: 8px 12px; cursor: pointer;"
         )
@@ -965,10 +1066,10 @@ server <- function(input, output, session) {
     app_title <- if(lang == "fr") {
       "Explorateur des données nivométriques – TNO"
     } else {
-      "Northwest Territories Snow Data Explorer"
+      "NWT Snow Data Explorer"
     }
 
-    lang_label <- if(lang == "fr") "English" else "Français"
+    lang_label <- if(lang == "fr") "EN" else "FR"
     contact_text <- if(lang == "fr") {
       "NWTHydrology-HydrologieTNO@gov.nt.ca"
     } else {

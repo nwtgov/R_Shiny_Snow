@@ -9,7 +9,7 @@ create_about_content <- function(lang) {
 
   <p style='font-size: 16px; line-height: 1.6;'>Cet Explorateur héberge les données de relevés nivométriques du Gouvernement des Territoires du Nord-Ouest (GTNO) recueillies à divers sites à travers les Territoires due Nord-Ouest. Les utilisateurs peuvent consulter des données résumées à l'aide d'une carte interactive et télécharger les données sous forme de fichier CSV.</p>
 
-  <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #0066cc;'>
+  <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #d1d5db;'>
     <h3 style='font-size: 18px; font-weight: bold; margin-top: 25px; margin-bottom: 10px;'>À propos</h3>
 
     <p style='font-size: 15px; line-height: 1.6;'>Le gouvernement des Territoires du Nord-Ouest–Ministère de l'Environnement et des Changements climatiques (GTNO–ECC) effectue des relevés nivométriques sur le terrain à travers le Territoires du Nord-Ouest chaque année.
@@ -20,7 +20,7 @@ create_about_content <- function(lang) {
     <p style='font-size: 15px; line-height: 1.6;'>Pour plus d'informations sur cet Explorateur, la collecte de données, l'utilisation des données et d'autres sujets connexes, veuillez visiter la section FAQ.</p>
   </div>
 
-  <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #0066cc;'>
+  <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #d1d5db;'>
     <h3 style='font-size: 18px; font-weight: bold; margin-top: 25px; margin-bottom: 10px;'>Explorer les données</h3>
 
     <p style='font-size: 15px; line-height: 1.6;'>Sélectionnez une année sur la carte interactive pour voir les conditions du manteau neigeux pour cette année. Les données de relevés nivométriques sont résumées et exprimées en pourcentage de la moyenne, montrant comment chaque site se compare à son historique à long terme.</p>
@@ -45,7 +45,7 @@ create_about_content <- function(lang) {
     </ul>
   </div>
 
-  <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #0066cc;'>
+  <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #d1d5db;'>
     <h3 style='font-size: 18px; font-weight: bold; margin-top: 25px; margin-bottom: 10px;'>Télécharger les données</h3>
 
     <p style='font-size: 15px; line-height: 1.6;'>Sélectionnez un site et les plages de dates à l'aide des outils de recherche et des listes déroulantes. Cliquez sur le bouton « Télécharger les donées » pour télécharger un fichier CSV contenant toutes les measures de relevés nivométriques du site et des années sélectionnés.</p>
@@ -59,7 +59,7 @@ create_about_content <- function(lang) {
 
   <p style='font-size: 16px; line-height: 1.6;'>This Explorer hosts Government of Northwest Territories snow survey data collected from various locations across the Northwest Territories. Users can view summarised data in an interactive map and can download all data in CSV file format.</p>
 
-  <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #0066cc;'>
+  <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #d1d5db;'>
     <h3 style='font-size: 18px; font-weight: bold; margin-top: 25px; margin-bottom: 10px;'>About</h3>
 
     <p style='font-size: 15px; line-height: 1.6;'>The Government of Northwest Territories–Department of Environment and Climate Change (GNWT–ECC) conducts on-the-ground snow surveys across the Northwest Territories every year. Snow surveys measure characteristics of the snowpack, such as snow depth and snow water equivalent (SWE). These snow surveys are undertaken at the end of winter (typically, in late March or early April) in order to measure the snowpack at its maximum, before it starts to melt. Data gathered during snow surveys are used to inform seasonal water level outlooks, and flood and wildfire risk assessments, to understand year-to-year variability, and for other water- and climate-related research.</p>
@@ -67,7 +67,7 @@ create_about_content <- function(lang) {
     <p style='font-size: 15px; line-height: 1.6;'>For more information on this Explorer, data collection, data usage, and other related topics, please visit the FAQ section.</p>
   </div>
 
-  <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #0066cc;'>
+  <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #d1d5db;'>
     <h3 style='font-size: 18px; font-weight: bold; margin-top: 25px; margin-bottom: 10px;'>Explore the Data</h3>
 
     <p style='font-size: 15px; line-height: 1.6;'>Select a year on the interactive map to view snowpack conditions for that year. Snow survey data are summarised and expressed as a percent of average, showing how each site compares to its long-term record. </p>
@@ -92,7 +92,7 @@ create_about_content <- function(lang) {
     </ul>
   </div>
 
-  <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #0066cc;'>
+  <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #d1d5db;'>
     <h3 style='font-size: 18px; font-weight: bold; margin-top: 25px; margin-bottom: 10px;'>Download Data</h3>
 
     <p style='font-size: 15px; line-height: 1.6;'>Select a site and date ranges using the search tools and drop-down lists. Click the 'Download Data' button to download a CSV file containing all snow survey measurements from the selected site and years.</p>

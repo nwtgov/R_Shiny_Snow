@@ -102,8 +102,6 @@ downloadUI <- function(id) {
 downloadServer <- function(id, first_visits, station_data_types, language, preloaded_data) {
   moduleServer(id, function(input, output, session) {
 
-    # setup_info_panel_server(input, output, session, language)
-
     # bring in preloaded data
     if (!is.null(preloaded_data()$md_3)) {
       md_3 <- preloaded_data()$md_3
@@ -148,6 +146,15 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
       all_sites <- sort(unique(md_3$site))
       all_years <- sort(unique(md_3$year), decreasing = FALSE)
 
+      # all sites option
+      site_choices <- c(
+        setNames(
+          "__ALL__",
+          if (language() == "fr") "TOUS LES SITES" else "ALL SITES"
+        ),
+        all_sites
+      )
+
       tagList(
         tags$div(
           style = "margin-bottom: 14px;",
@@ -176,7 +183,7 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
             selectizeInput(
               session$ns("snow_site"),
               label = NULL,
-              choices = all_sites,
+              choices = site_choices,
               selected = character(0),
               options = list(
                 placeholder = if (language() == "fr")
@@ -223,12 +230,13 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
               "Note : Les années s’ajustent selon les données disponibles pour le site sélectionné."
             } else {
               "Note: Years update based on available data for the selected site."
-            }
+            },
           )
         ),
 
         # download and site year warning
         uiOutput(session$ns("site_year_warning")),
+        uiOutput(session$ns("all_sites_size_note")),
         tags$div(
           style = "display: flex; justify-content: flex-end; margin-top: 16px;",
           downloadButton(session$ns("download_snow"),
@@ -240,15 +248,33 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
       )
     })
 
-
-
     observeEvent(input$snow_site, {
-      site_years <- md_3$year[md_3$site == input$snow_site]
-      site_years <- sort(unique(site_years))
-      if (!is.null(input$snow_site) && length(site_years) > 0) {
+      if (is.null(input$snow_site) || !nzchar(input$snow_site)) return()
+
+      if (identical(input$snow_site, "__ALL__")) {
+        site_years <- sort(unique(md_3$year))
+      } else {
+        site_years <- sort(unique(md_3$year[md_3$site == input$snow_site]))
+      }
+
+      if (length(site_years) > 0) {
         updateSelectInput(session, "start_year", choices = site_years, selected = min(site_years))
         updateSelectInput(session, "end_year", choices = site_years, selected = max(site_years))
       }
+    })
+
+    output$all_sites_size_note <- renderUI({
+      req(input$snow_site)
+      if (!identical(input$snow_site, "__ALL__")) return(NULL)
+
+      tags$div(
+        style = "color: #d32f2f; font-size: 14px; margin-top: 10px;",
+        if (language() == "fr") {
+          "Note : Télécharger tous les sites génère un gros fichier CSV (souvent >10 Mo) et peut prendre plus de temps."
+        } else {
+          "Note: Downloading all sites produces a large CSV (often >10 MB) and may take longer."
+        }
+      )
     })
 
     output$site_year_warning <- renderUI({
@@ -287,25 +313,39 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
     output$download_snow <- downloadHandler(
       filename = function() {
         year_range <- paste(input$start_year, input$end_year, sep = "-")
+        site_slug <- if (identical(input$snow_site, "__ALL__")) {
+        if (language() == "fr") "tous_les_sites" else "all_sites"
+      } else {
+        gsub("[^A-Za-z0-9]", "_", input$snow_site)
+      }
         if (language() == "fr") {
-          paste0("données_nivometriques_",
-                 gsub("[^A-Za-z0-9]", "_", input$snow_site), "_",
-                 year_range, ".csv")
-        } else {
-          paste0("snow_data_",
-                 gsub("[^A-Za-z0-9]", "_", input$snow_site), "_",
-                 year_range, ".csv")
-        }
+        paste0("données_nivometriques_", site_slug, "_", year_range, ".csv")
+      } else {
+        paste0("snow_data_", site_slug, "_", year_range, ".csv")
+      }
       },
       content = function(file) {
         # Filter data for selected site and date range
-        snow_data <- md_3 %>%
-          dplyr::filter(
-            site == input$snow_site,
-            year >= as.numeric(input$start_year),
-            year <= as.numeric(input$end_year)
-          ) %>%
-          arrange(year, date_time)
+          snow_data <- md_3 %>%
+            dplyr::filter(
+              year >= as.numeric(input$start_year),
+              year <= as.numeric(input$end_year)
+            )
+
+          # Single site only
+          if (!identical(input$snow_site, "__ALL__")) {
+            snow_data <- snow_data %>%
+              dplyr::filter(site == input$snow_site)
+          }
+
+          # Reorder rows based on selection
+          if (identical(input$snow_site, "__ALL__")) {
+            snow_data <- snow_data %>%
+              dplyr::arrange(site_id, year, date_time)
+          } else {
+            snow_data <- snow_data %>%
+              dplyr::arrange(year, date_time)
+          }
 
         # removing activity column from downloaded data
         snow_data <- snow_data %>%
