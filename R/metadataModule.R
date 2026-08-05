@@ -538,7 +538,7 @@ filtered_sites <- reactive({
 
       map <- leaflet() %>%
           addTiles() %>%
-          setView(lng = -123, lat = 63.7, zoom = 4.5) %>%
+          setView(lng = -123, lat = 64, zoom = 4.5) %>%
           addProviderTiles(providers$CartoDB.Positron, group = map_text()$base_maps$cartodb) %>%
           addProviderTiles(providers$Esri.WorldImagery, group = map_text()$base_maps$esri) %>%
           addPolylines(data = nwt_boundary, weight = 2, color = "#000000", opacity = 0.8, group = map_text()$basins$nwt_boundary) %>%
@@ -569,8 +569,20 @@ filtered_sites <- reactive({
             popupOptions = popupOptions(autoPan = TRUE)
             )%>%
           addLayersControl(
-            overlayGroups = c(map_text()$basins$nwt_boundary,map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$snare, map_text()$basins$YKriver,map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay,
-                              map_text()$basins$lamartre, map_text()$basins$willow, map_text()$basins$camsell, map_text()$basins$greatbear, map_text()$basins$arcticred, map_text()$basins$hareind,map_text()$basins$taltson),
+            overlayGroups = c(map_text()$basins$nwt_boundary,
+                              map_text()$basins$mackenzie,
+                              map_text()$basins$arcticred,
+                              map_text()$basins$camsell,
+                              map_text()$basins$greatbear,
+                              map_text()$basins$hareind,
+                              map_text()$basins$hay,
+                              map_text()$basins$lamartre,
+                              map_text()$basins$liard,
+                              map_text()$basins$peel,
+                              map_text()$basins$slave,
+                              map_text()$basins$snare,
+                              map_text()$basins$taltson,
+                              map_text()$basins$YKriver),
             baseGroups = c(map_text()$base_maps$cartodb, map_text()$base_maps$esri),
             options = layersControlOptions(collapsed = TRUE)
           )

@@ -29,6 +29,9 @@ mainUI <- fluidPage(
       href = "https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap"
     ),
     tags$style(HTML("
+          body {
+          font-family: 'Noto Sans', sans-serif;
+          }
           body::after {
             content: '';
             position: absolute;
@@ -47,7 +50,8 @@ mainUI <- fluidPage(
             margin-bottom: 0;
             border-radius: 0;
             background-color: #ffffff;
-            height: 60px;
+            height: auto;
+            min-height: 60px;
             padding: 0;
             border-bottom: none;
             width: 100% !important;
@@ -55,6 +59,17 @@ mainUI <- fluidPage(
           }
           .navbar-header {
             position: static !important;
+            float: none !important;
+            flex: 0 1 auto;
+            max-width: 100%;
+          }
+          .navbar > .container-fluid {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            width: 100%;
+            /* Reserve space so tabs don't slide under the absolute language toggle */
+            padding-right: 72px;
           }
           .navbar-brand {
             color: #000000 !important;
@@ -106,12 +121,26 @@ mainUI <- fluidPage(
             background-color: #0066cc;
             height: 60px;
             padding: 0;
-            display: flex;
-            align-items:center !important;
-            float: right !important;
-            margin: 0 60px 0 0;
+            display: flex !important;
+            align-items: center !important;
+            float: none !important;
+            /* Push tab group to the right while on the same row as the title */
+            margin: 0 0 0 auto !important;
             border: none;
             position: static !important;
+            flex: 0 1 auto;
+            min-width: max-content;
+            max-width: 100%;
+            justify-content: flex-end;
+          }
+          /* Applied by JS only after the tabs have actually wrapped */
+          .navbar-nav.is-wrapped {
+            flex: 0 0 auto;
+            flex-basis: auto;
+            width: max-content;
+            justify-content: center;
+            margin-left: auto !important;
+            margin-right: auto !important;
           }
           .navbar-nav > li > a {
             color: #ffffff !important;
@@ -119,6 +148,13 @@ mainUI <- fluidPage(
             margin: 0;
             border: none;
           }
+          .navbar-nav > li > a .nav-tab-multiline {
+  display: inline-block;
+  max-width: 110px;
+  white-space: normal;
+  line-height: 1.15;
+  text-align: center;
+}
           .navbar-nav > li.active > a {
             color: #ffffff !important;
             background-color: #2699D5 !important;
@@ -426,7 +462,7 @@ mainUI <- fluidPage(
     align-items: center;
     justify-content: center;
     color: inherit;
-    font-family: Arial, sans-serif;
+    font-family: 'Noto Sans', sans-serif;
     font-size: 17px;
     font-weight: bold;
     text-decoration: none;
@@ -488,43 +524,6 @@ mainUI <- fluidPage(
     font-weight: 355;
     letter-spacing: 0.01em;
   }
-
-  /* ===== Navbar wrapping to avoid lang toggle overlapping ===== */
-/* Force nav tabs below brand before they overlap the language toggle */
-@media (max-width: 1120px) {
-  .navbar {
-    height: auto;
-    min-height: 60px;
-  }
-
-  .navbar-header {
-    float: none;
-    width: 100%;
-  }
-
-  .navbar .navbar-collapse {
-    display: flex !important;
-    justify-content: center !important;
-    float: none !important;
-    clear: both;
-    width: 100% !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  .navbar-nav {
-    float: none !important;
-    display: flex !important;
-    width: fit-content !important;
-    max-width: 100%;
-    margin: 0 auto !important;
-  }
-
-  .language-toggle-container {
-    top: 0;
-    height: 60px;
-  }
-}
 
 
   /* ===== Footer on medium sized screen ===== */
@@ -778,7 +777,26 @@ mainUI <- fluidPage(
     if (tabLink.length > 0) {
       tabLink.click();
     }
+    }
+
+      function updateNavbarWrap() {
+    var header = document.querySelector('.navbar .navbar-header');
+    var nav = document.querySelector('.navbar .navbar-nav');
+    if (!header || !nav) return;
+    // Tabs are wrapped when they sit clearly below the brand/title row
+    var wrapped = nav.getBoundingClientRect().top >
+                  header.getBoundingClientRect().top + 8;
+    nav.classList.toggle('is-wrapped', wrapped);
   }
+  $(document).ready(function() {
+    updateNavbarWrap();
+    $(window).on('resize', updateNavbarWrap);
+    // Navbar is rebuilt on language change
+    new MutationObserver(function() {
+      updateNavbarWrap();
+    }).observe(document.body, { childList: true, subtree: true });
+  });
+
     function mobileSwitchTab(tabValue) {
       var tabLink = $('#navbar').find('a[data-value=\"' + tabValue + '\"]');
       if (tabLink.length > 0) {
@@ -1022,7 +1040,12 @@ server <- function(input, output, session) {
         aboutUI("about")
       ),
       tabPanel(
-        if(language() == "fr") "Données nivométriques" else "Snow Data",
+        title = if (language() == "fr") {
+          tags$span(class = "nav-tab-multiline", "Données nivométriques")
+        } else {
+          "Snow Data"
+        },
+        value = if (language() == "fr") "Données nivométriques" else "Snow Data",
         snowUI("snow")
       ),
       tabPanel(

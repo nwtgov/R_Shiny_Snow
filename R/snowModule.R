@@ -173,13 +173,32 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
 
     # display consistent legend bins
     bin_colours <- c(
-      "> 151%"      = "#4575B4",
-      "131 - 150%"  = "#91BFDB",
-      "111 - 130%"  = "#E0F3F8",
-      "91 - 110%"   = "#FFFFBF",
-      "71 - 90%"    = "#FEE090",
-      "51 - 70%"    = "#FC8D59",
-      "< 50%"       = "#D73027"
+      # v1 - Original palette
+      # "> 151%"      = "#4575B4",
+      # "131 - 150%"  = "#91BFDB",
+      # "111 - 130%"  = "#E0F3F8",
+      # "91 - 110%"   = "#FFFFBF",
+      # "71 - 90%"    = "#FEE090",
+      # "51 - 70%"    = "#FC8D59",
+      # "< 50%"       = "#D73027"
+
+      # # v2b - new palette option a
+      # "> 151%"      = "#3399FF",
+      # "131 - 150%"  = "#99CCFF",
+      # "111 - 130%"  = "#C5DCFF", # new
+      # "91 - 110%"   = "#FFE6B3",
+      # "71 - 90%"    = "#FFCFB3", # new
+      # "51 - 70%"    = "#FFB3B3",
+      # "< 50%"       = "#FF6666"
+      #
+      # # v2 - new palette option b
+      "> 151%"      = "#0052A3", # new
+      "131 - 150%"  = "#3399FF",
+      "111 - 130%"  = "#99CCFF",
+      "91 - 110%"   = "#FFE6B3",
+      "71 - 90%"    = "#FFB3B3",
+      "51 - 70%"    = "#FF6666",
+      "< 50%"       = "#B32424" # new
     )
     all_legend_bins <- factor(
       names(bin_colours),
@@ -399,7 +418,7 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
       if(nrow(df) == 0) {
         leaflet() %>%
           addTiles() %>%
-          setView(lng = -123, lat = 63.7, zoom = 4.5) %>%
+          setView(lng = -123, lat = 64, zoom = 4.5) %>%
           addProviderTiles(providers$CartoDB.Positron, group = map_text()$base_maps$cartodb) %>%
           addProviderTiles(providers$Esri.WorldImagery, group = map_text()$base_maps$esri) %>%
           addPolylines(data = nwt_boundary, weight = 2, color = "#000000", opacity = 0.8, group = map_text()$basins$nwt_boundary) %>%
@@ -418,7 +437,14 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
           addPolylines(data = hareind, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hareind) %>%
           addPolylines(data = taltson, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$taltson) %>%
           addLayersControl(
-            overlayGroups = c(map_text()$basins$nwt_boundary,map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$snare, map_text()$basins$YKriver, map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay),
+            overlayGroups = c(map_text()$basins$nwt_boundary,
+                              map_text()$basins$mackenzie,
+                              map_text()$basins$slave,
+                              map_text()$basins$snare,
+                              map_text()$basins$YKriver,
+                              map_text()$basins$liard,
+                              map_text()$basins$peel,
+                              map_text()$basins$hay),
             baseGroups = c(map_text()$base_maps$cartodb, map_text()$base_maps$esri),
             options = layersControlOptions(collapsed = TRUE)
           ) %>%
@@ -430,7 +456,7 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
       } else {
         leaflet() %>%
           addTiles() %>%
-          setView(lng = -123, lat = 63.7, zoom = 4.5) %>%
+          setView(lng = -123, lat = 64, zoom = 4.5) %>%
           addProviderTiles(providers$CartoDB.Positron, group = map_text()$base_maps$cartodb) %>%
           addProviderTiles(providers$Esri.WorldImagery, group = map_text()$base_maps$esri) %>%
           addPolylines(data = nwt_boundary, weight = 2, color = "#000000", opacity = 0.8, group = map_text()$basins$nwt_boundary) %>%
@@ -464,8 +490,20 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
             )
           ) %>%
           addLayersControl(
-            overlayGroups = c(map_text()$basins$nwt_boundary,map_text()$basins$mackenzie, map_text()$basins$slave, map_text()$basins$snare, map_text()$basins$YKriver, map_text()$basins$liard, map_text()$basins$peel, map_text()$basins$hay,
-                              map_text()$basins$lamartre, map_text()$basins$willow, map_text()$basins$camsell, map_text()$basins$greatbear, map_text()$basins$arcticred, map_text()$basins$hareind,map_text()$basins$taltson),
+            overlayGroups = c(map_text()$basins$nwt_boundary,
+                              map_text()$basins$mackenzie,
+                              map_text()$basins$arcticred,
+                              map_text()$basins$camsell,
+                              map_text()$basins$greatbear,
+                              map_text()$basins$hareind,
+                              map_text()$basins$hay,
+                              map_text()$basins$lamartre,
+                              map_text()$basins$liard,
+                              map_text()$basins$peel,
+                              map_text()$basins$slave,
+                              map_text()$basins$snare,
+                              map_text()$basins$taltson,
+                              map_text()$basins$YKriver),
             baseGroups = c(map_text()$base_maps$cartodb, map_text()$base_maps$esri),
             options = layersControlOptions(collapsed = TRUE)
           ) %>%
