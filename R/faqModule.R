@@ -171,7 +171,7 @@ faqServer <- function(id, first_visits, language, app_version) {
 
     output$footer_curve <- renderUI({
       req(language())
-      footer_curve_ui(language())
+      gnwt_footer_ui(language())
     })
 
     # Load FAQ data

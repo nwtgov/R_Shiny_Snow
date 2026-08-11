@@ -124,7 +124,7 @@ aboutServer <- function(id, language) {
 
     output$footer_curve <- renderUI({
       req(language())
-      footer_curve_ui(language())
+      gnwt_footer_ui(language())
     })
   })
 }

@@ -135,7 +135,7 @@ downloadServer <- function(id, first_visits, station_data_types, language, prelo
 
     output$footer_curve <- renderUI({
       req(language())
-      footer_curve_ui(language())
+      gnwt_footer_ui(language())
     })
 
     # download controls

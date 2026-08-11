@@ -174,13 +174,13 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
     # display consistent legend bins
     bin_colours <- c(
       # v1 - Original palette
-      # "> 151%"      = "#4575B4",
-      # "131 - 150%"  = "#91BFDB",
-      # "111 - 130%"  = "#E0F3F8",
-      # "91 - 110%"   = "#FFFFBF",
-      # "71 - 90%"    = "#FEE090",
-      # "51 - 70%"    = "#FC8D59",
-      # "< 50%"       = "#D73027"
+      "> 151%"      = "#4575B4",
+      "131 - 150%"  = "#91BFDB",
+      "111 - 130%"  = "#E0F3F8",
+      "91 - 110%"   = "#FFFFBF",
+      "71 - 90%"    = "#FEE090",
+      "51 - 70%"    = "#FC8D59",
+      "< 50%"       = "#D73027"
 
       # # v2b - new palette option a
       # "> 151%"      = "#3399FF",
@@ -192,13 +192,13 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
       # "< 50%"       = "#FF6666"
       #
       # # v2 - new palette option b
-      "> 151%"      = "#0052A3", # new
-      "131 - 150%"  = "#3399FF",
-      "111 - 130%"  = "#99CCFF",
-      "91 - 110%"   = "#FFE6B3",
-      "71 - 90%"    = "#FFB3B3",
-      "51 - 70%"    = "#FF6666",
-      "< 50%"       = "#B32424" # new
+      # "> 151%"      = "#0052A3", # new
+      # "131 - 150%"  = "#3399FF",
+      # "111 - 130%"  = "#99CCFF",
+      # "91 - 110%"   = "#FFE6B3",
+      # "71 - 90%"    = "#FFB3B3",
+      # "51 - 70%"    = "#FF6666",
+      # "< 50%"       = "#B32424" # new
     )
     all_legend_bins <- factor(
       names(bin_colours),
@@ -405,8 +405,9 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
       #print(paste("output$snow_map RENDERING - snow_data rows:", nrow(snow_data()), "map_text language:", isolate(language()), "at", Sys.time()))
       req(snow_data())
       req(map_text())
-      map_text <- isolate(map_text()) # isolate to evaluate once per render and prevent duplicate rendering
+      texts <- isolate(map_text()) # isolate to evaluate once per render and prevent duplicate rendering
       df <- snow_data()
+      popup_content <- build_snow_popup_content(df, texts)
 
       PerCol <- leaflet::colorFactor(
         palette = unname(bin_colours),
@@ -419,37 +420,37 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
         leaflet() %>%
           addTiles() %>%
           setView(lng = -123, lat = 64, zoom = 4.5) %>%
-          addProviderTiles(providers$CartoDB.Positron, group = map_text()$base_maps$cartodb) %>%
-          addProviderTiles(providers$Esri.WorldImagery, group = map_text()$base_maps$esri) %>%
-          addPolylines(data = nwt_boundary, weight = 2, color = "#000000", opacity = 0.8, group = map_text()$basins$nwt_boundary) %>%
-          addPolylines(data = mackenzie_basin, weight = 2, color = "#888888", opacity = 0.8, group = map_text()$basins$mackenzie) %>%
-          addPolylines(data = slave, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$slave) %>%
-          addPolylines(data = snare, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$snare) %>%
-          addPolylines(data = YKriver, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$YKriver) %>%
-          addPolylines(data = peel, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$peel) %>%
-          addPolylines(data = hay, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hay) %>%
-          addPolylines(data = liard, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$liard) %>%
-          addPolylines(data = lamartre, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$lamartre) %>%
-          addPolylines(data = willow, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$willow) %>%
-          addPolylines(data = camsell, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$camsell) %>%
-          addPolylines(data = greatbear, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$greatbear) %>%
-          addPolylines(data = arcticred, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$arcticred) %>%
-          addPolylines(data = hareind, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hareind) %>%
-          addPolylines(data = taltson, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$taltson) %>%
+          addProviderTiles(providers$CartoDB.Positron, group = texts$base_maps$cartodb) %>%
+          addProviderTiles(providers$Esri.WorldImagery, group = texts$base_maps$esri) %>%
+          addPolylines(data = nwt_boundary, weight = 2, color = "#000000", opacity = 0.8, group = texts$basins$nwt_boundary) %>%
+          addPolylines(data = mackenzie_basin, weight = 2, color = "#888888", opacity = 0.8, group = texts$basins$mackenzie) %>%
+          addPolylines(data = slave, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$slave) %>%
+          addPolylines(data = snare, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$snare) %>%
+          addPolylines(data = YKriver, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$YKriver) %>%
+          addPolylines(data = peel, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$peel) %>%
+          addPolylines(data = hay, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$hay) %>%
+          addPolylines(data = liard, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$liard) %>%
+          addPolylines(data = lamartre, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$lamartre) %>%
+          addPolylines(data = willow, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$willow) %>%
+          addPolylines(data = camsell, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$camsell) %>%
+          addPolylines(data = greatbear, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$greatbear) %>%
+          addPolylines(data = arcticred, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$arcticred) %>%
+          addPolylines(data = hareind, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$hareind) %>%
+          addPolylines(data = taltson, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$taltson) %>%
           addLayersControl(
-            overlayGroups = c(map_text()$basins$nwt_boundary,
-                              map_text()$basins$mackenzie,
-                              map_text()$basins$slave,
-                              map_text()$basins$snare,
-                              map_text()$basins$YKriver,
-                              map_text()$basins$liard,
-                              map_text()$basins$peel,
-                              map_text()$basins$hay),
-            baseGroups = c(map_text()$base_maps$cartodb, map_text()$base_maps$esri),
+            overlayGroups = c(texts$basins$nwt_boundary,
+                              texts$basins$mackenzie,
+                              texts$basins$slave,
+                              texts$basins$snare,
+                              texts$basins$YKriver,
+                              texts$basins$liard,
+                              texts$basins$peel,
+                              texts$basins$hay),
+            baseGroups = c(texts$base_maps$cartodb, texts$base_maps$esri),
             options = layersControlOptions(collapsed = TRUE)
           ) %>%
           addControl(
-            html = paste("<div style='padding: 0.5px; background-color: white; opacity: 0.6; border-radius: 0.5px; font-size: 10px;'>", map_text()$last_updated, "</div>"),
+            html = paste("<div style='padding: 0.5px; background-color: white; opacity: 0.6; border-radius: 0.5px; font-size: 10px;'>", texts$last_updated, "</div>"),
             position = "bottomleft",
             className = "last-updated-control"
           )
@@ -457,24 +458,24 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
         leaflet() %>%
           addTiles() %>%
           setView(lng = -123, lat = 64, zoom = 4.5) %>%
-          addProviderTiles(providers$CartoDB.Positron, group = map_text()$base_maps$cartodb) %>%
-          addProviderTiles(providers$Esri.WorldImagery, group = map_text()$base_maps$esri) %>%
-          addPolylines(data = nwt_boundary, weight = 2, color = "#000000", opacity = 0.8, group = map_text()$basins$nwt_boundary) %>%
-          addPolylines(data = mackenzie_basin, weight = 2, color = "#888888", opacity = 0.8, group = map_text()$basins$mackenzie) %>%
-          addPolylines(data = slave, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$slave) %>%
-          addPolylines(data = snare, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$snare) %>%
-          addPolylines(data = YKriver, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$YKriver) %>%
-          addPolylines(data = peel, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$peel) %>%
-          addPolylines(data = hay, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hay) %>%
-          addPolylines(data = liard, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$liard) %>%
+          addProviderTiles(providers$CartoDB.Positron, group = texts$base_maps$cartodb) %>%
+          addProviderTiles(providers$Esri.WorldImagery, group = texts$base_maps$esri) %>%
+          addPolylines(data = nwt_boundary, weight = 2, color = "#000000", opacity = 0.8, group = texts$basins$nwt_boundary) %>%
+          addPolylines(data = mackenzie_basin, weight = 2, color = "#888888", opacity = 0.8, group = texts$basins$mackenzie) %>%
+          addPolylines(data = slave, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$slave) %>%
+          addPolylines(data = snare, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$snare) %>%
+          addPolylines(data = YKriver, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$YKriver) %>%
+          addPolylines(data = peel, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$peel) %>%
+          addPolylines(data = hay, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$hay) %>%
+          addPolylines(data = liard, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$liard) %>%
 
-          addPolylines(data = lamartre, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$lamartre) %>%
-          addPolylines(data = willow, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$willow) %>%
-          addPolylines(data = camsell, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$camsell) %>%
-          addPolylines(data = greatbear, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$greatbear) %>%
-          addPolylines(data = arcticred, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$arcticred) %>%
-          addPolylines(data = hareind, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$hareind) %>%
-          addPolylines(data = taltson, weight = 2, color = "#999999", opacity = 0.8, group = map_text()$basins$taltson) %>%
+          addPolylines(data = lamartre, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$lamartre) %>%
+          addPolylines(data = willow, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$willow) %>%
+          addPolylines(data = camsell, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$camsell) %>%
+          addPolylines(data = greatbear, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$greatbear) %>%
+          addPolylines(data = arcticred, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$arcticred) %>%
+          addPolylines(data = hareind, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$hareind) %>%
+          addPolylines(data = taltson, weight = 2, color = "#999999", opacity = 0.8, group = texts$basins$taltson) %>%
           addCircleMarkers(
             data = df,
             color = "black",
@@ -482,43 +483,64 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
             lat = ~Lat, lng = ~Long,
             radius = 7, label = ~Site,
             weight = 1, opacity = 0.8, fillOpacity = 0.8,
-            popup = ~paste0(
-              map_text()$popup$percent_avg, ": ", round(Percent_Normal, 1), "<br>",
-              map_text()$popup$swe, ": ", round(Current_SWE, 1), "<br>",
-              map_text()$popup$snow_depth, ": ", round(Current_Depth, 1), "<br>",
-              map_text()$popup$years_record, ": ", Length_Total
+            popup = popup_content,
+            popupOptions = popupOptions(
+              autoPan = TRUE,
+              keepInView = TRUE,
+              autoPanPaddingTopLeft = c(40, 80),
+              autoPanPaddingBottomRight = c(40, 40)
             )
           ) %>%
           addLayersControl(
-            overlayGroups = c(map_text()$basins$nwt_boundary,
-                              map_text()$basins$mackenzie,
-                              map_text()$basins$arcticred,
-                              map_text()$basins$camsell,
-                              map_text()$basins$greatbear,
-                              map_text()$basins$hareind,
-                              map_text()$basins$hay,
-                              map_text()$basins$lamartre,
-                              map_text()$basins$liard,
-                              map_text()$basins$peel,
-                              map_text()$basins$slave,
-                              map_text()$basins$snare,
-                              map_text()$basins$taltson,
-                              map_text()$basins$YKriver),
-            baseGroups = c(map_text()$base_maps$cartodb, map_text()$base_maps$esri),
+            overlayGroups = c(texts$basins$nwt_boundary,
+                              texts$basins$mackenzie,
+                              texts$basins$arcticred,
+                              texts$basins$camsell,
+                              texts$basins$greatbear,
+                              texts$basins$hareind,
+                              texts$basins$hay,
+                              texts$basins$lamartre,
+                              texts$basins$liard,
+                              texts$basins$peel,
+                              texts$basins$slave,
+                              texts$basins$snare,
+                              texts$basins$taltson,
+                              texts$basins$YKriver),
+            baseGroups = c(texts$base_maps$cartodb, texts$base_maps$esri),
             options = layersControlOptions(collapsed = TRUE)
           ) %>%
           addLegend(
             'bottomright',
             pal = PerCol,
             values = all_legend_bins,     #df$Percent_Normal_Bin,
-            title = map_text()$legend$title,
+            title = texts$legend$title,
             opacity = 1
           ) %>%
           addControl(
-            html = paste("<div style='padding: 0.5px; background-color: white; opacity: 0.6; border-radius: 0.5px; font-size: 10px;'>", map_text()$last_updated, "</div>"),
+            html = paste("<div style='padding: 0.5px; background-color: white; opacity: 0.6; border-radius: 0.5px; font-size: 10px;'>", texts$last_updated, "</div>"),
             position = "bottomleft",
             className = "last-updated-control"
-          )
+          ) %>%
+          htmlwidgets::onRender("
+  function(el, x) {
+    var map = this;
+    map.on('popupopen', function(e) {
+      var popup = e.popup.getElement();
+      if (popup) {
+        popup.classList.add('metadata-popup');
+        var wrapper = popup.querySelector('.leaflet-popup-content-wrapper');
+        if (wrapper) {
+          wrapper.classList.add('metadata-popup-wrapper');
+        }
+      }
+      setTimeout(function() {
+        if (e.popup && e.popup._adjustPan) {
+          e.popup._adjustPan();
+        }
+      }, 0);
+    });
+  }
+")
       }
     })
 
@@ -537,19 +559,19 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
 
         leafletProxy(session$ns("snow_map"), session) %>%
           hideGroup(c(
-            map_text()$basins$slave,
-            map_text()$basins$snare,
-            map_text()$basins$YKriver,
-            map_text()$basins$liard,
-            map_text()$basins$peel,
-            map_text()$basins$hay,
-            map_text()$basins$lamartre,
-            map_text()$basins$willow,
-            map_text()$basins$camsell,
-            map_text()$basins$greatbear,
-            map_text()$basins$arcticred,
-            map_text()$basins$hareind,
-            map_text()$basins$taltson
+            map_text$basins$slave,
+            map_text$basins$snare,
+            map_text$basins$YKriver,
+            map_text$basins$liard,
+            map_text$basins$peel,
+            map_text$basins$hay,
+            map_text$basins$lamartre,
+            map_text$basins$willow,
+            map_text$basins$camsell,
+            map_text$basins$greatbear,
+            map_text$basins$arcticred,
+            map_text$basins$hareind,
+            map_text$basins$taltson
           ))
       })
     })

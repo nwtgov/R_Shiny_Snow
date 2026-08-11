@@ -16,57 +16,7 @@ metadataUI <- function(id) {
     bottom: 30px;
     z-index: 1;
   }
-  /* Only apply to metadata map popups - using class added by JavaScript */
-  .metadata-popup .leaflet-popup-content-wrapper {
-    font-size: 16px !important;
-    width: fit-content !important;
-    min-width: 600px !important;
-    max-width: 800px !important;
-  }
-  .metadata-popup .leaflet-popup-content {
-    font-size: 16px !important;
-    line-height: 1.5 !important;
-    margin: 12px 16px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  .metadata-popup .leaflet-popup-tip{
-  display: none !important;
-  }
-  .metadata-popup .metadata-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 6px;
-  }
-  .metadata-popup .metadata-table td {
-    padding: 6px 10px 6px 0;
-    vertical-align: top;
-  }
-  .metadata-popup .metadata-table td:first-child {
-    font-weight: bold;
-    color: #333;
-    width: 30%;
-  }
-  .metadata-popup .metadata-table td:last-child {
-    padding-left: 0;
-    color: #555;
-    word-wrap: break-word;
-    white-space: normal;
-  }
-  .metadata-popup .metadata-table tr {
-    border-bottom: 1px solid #eee;
-  }
-  .metadata-popup .metadata-table tr:last-child {
-    border-bottom: none;
-  }
-  .metadata-popup .metadata-header {
-    font-weight: bold;
-    margin-bottom: 8px;
-    font-size: 18px;
-    border-bottom: 2px solid #2699D5;
-    padding-bottom: 4px;
-    color: #0066cc;
-  }
+
   .leaflet-control-zoom {
     position: fixed !important;
     bottom: 80px !important;
@@ -566,7 +516,8 @@ filtered_sites <- reactive({
             opacity = ifelse(meta_df$has_data_in_selection, 0.8, 0.4),
             fillOpacity = ifelse(meta_df$has_data_in_selection, 0.8, 0.4),
             popup = popup_content,
-            popupOptions = popupOptions(autoPan = TRUE)
+            popupOptions = popupOptions(autoPan = TRUE,
+                                        keepInView = TRUE)
             )%>%
           addLayersControl(
             overlayGroups = c(map_text()$basins$nwt_boundary,

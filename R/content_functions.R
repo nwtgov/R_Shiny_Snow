@@ -32,7 +32,7 @@ gnwt_footer_graphic <- function() {
 gnwt_footer_links <- function(lang = "en") {
   links <- if (lang == "fr") {
     list(
-      phone        = c("Répertoire téléphonique", "http://rdirectory.gov.nt.ca/rDirectory.aspx"),
+      phone        = c("Répertoire", "http://rdirectory.gov.nt.ca/rDirectory.aspx"),
       terms        = c("Modalités d'utilisation", "https://www.gov.nt.ca/en/terms"),
       accessibility = c("Accessibilité", "https://www.gov.nt.ca/accessibility/"),
       contact      = c("Contact", "https://www.gov.nt.ca/contact-gnwt"),
@@ -60,7 +60,6 @@ gnwt_footer_links <- function(lang = "en") {
     })
   )
 }
-
 
 gnwt_footer_branding <- function(lang = "en") {
   if (lang == "fr") {
@@ -92,13 +91,16 @@ gnwt_navbar_wordmark <- function(lang = "en") {
     line_large <- "Northwest Territories"
   }
 
+  # separate wordmark tag for EN and FR
   tags$div(
-    class = "navbar-gnwt-brand",
+    class = paste(
+      "navbar-gnwt-brand",
+      if (lang == "fr") "navbar-gnwt-brand--fr" else "navbar-gnwt-brand--en"
+    ),
     tags$div(class = "navbar-gnwt-brand-line navbar-gnwt-brand-line--small", line_small),
     tags$div(class = "navbar-gnwt-brand-line navbar-gnwt-brand-line--large", line_large)
   )
 }
-
 
 gnwt_footer_ui <- function(lang = "en") {
   tags$footer(
@@ -115,9 +117,26 @@ gnwt_footer_ui <- function(lang = "en") {
   )
 }
 
-footer_curve_ui <- function(lang = "en") {
-  gnwt_footer_ui(lang)
+
+# SnowModule
+build_snow_popup_content <- function(df, texts) {
+  paste0(
+    "<div>",
+    "<div class='metadata-header'>", df$Site, "</div>",
+    "<table class='metadata-table'>",
+    "<tr><td>", texts$popup$percent_avg, ":</td><td>",
+    round(df$Percent_Normal, 1), "</td></tr>",
+    "<tr><td>", texts$popup$swe, ":</td><td>",
+    round(df$Current_SWE, 1), "</td></tr>",
+    "<tr><td>", texts$popup$snow_depth, ":</td><td>",
+    round(df$Current_Depth, 1), "</td></tr>",
+    "<tr><td>", texts$popup$years_record, ":</td><td>",
+    df$Length_Total, "</td></tr>",
+    "</table>",
+    "</div>"
+  )
 }
+
 
 # DownloadModule
 

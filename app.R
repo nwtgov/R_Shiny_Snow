@@ -117,6 +117,14 @@ mainUI <- fluidPage(
           letter-spacing: 0.01em;
         }
 
+        /* French: slightly smaller */
+        .navbar-gnwt-brand--fr .navbar-gnwt-brand-line--small {
+          font-size: 13px;
+        }
+        .navbar-gnwt-brand--fr .navbar-gnwt-brand-line--large {
+          font-size: 17px;
+        }
+
           .navbar-nav {
             background-color: #0066cc;
             height: 60px;
@@ -144,17 +152,17 @@ mainUI <- fluidPage(
           }
           .navbar-nav > li > a {
             color: #ffffff !important;
-            font-size: 14px;
+            font-size: 13px;
             margin: 0;
             border: none;
           }
           .navbar-nav > li > a .nav-tab-multiline {
-  display: inline-block;
-  max-width: 110px;
-  white-space: normal;
-  line-height: 1.15;
-  text-align: center;
-}
+            display: inline-block;
+            max-width: 110px;
+            white-space: normal;
+            line-height: 1.15;
+            text-align: center;
+          }
           .navbar-nav > li.active > a {
             color: #ffffff !important;
             background-color: #2699D5 !important;
@@ -179,7 +187,7 @@ mainUI <- fluidPage(
             z-index: 1;
           }
           .leaflet-tooltip {
-            font-size: 16px !important;
+            font-size: 15px !important;
             font-weight: bold;
             padding: 6px 10px !important;
           }
@@ -275,6 +283,62 @@ mainUI <- fluidPage(
               display: inline;
             }
           }
+
+      /* Shared map popups (snow summary + metadata) */
+      .metadata-popup .leaflet-popup-content-wrapper {
+        font-size: 16px !important;
+        width: fit-content !important;
+        min-width: 400px !important;
+        max-width: min(92vw, 1000px) !important;
+        max-height: min(55vh, 420px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important; /* no horizontal scroll */
+      }
+      .metadata-popup .leaflet-popup-content {
+        font-size: 16px !important;
+        line-height: 1.5 !important;
+        margin: 12px 16px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      .metadata-popup .leaflet-popup-tip {
+        display: none !important;
+      }
+      .metadata-popup .metadata-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 6px;
+      }
+      .metadata-popup .metadata-table td {
+        padding: 6px 10px 6px 0;
+        vertical-align: top;
+      }
+      .metadata-popup .metadata-table td:first-child {
+        font-weight: bold;
+        color: #333;
+        width: 40%;
+      }
+      .metadata-popup .metadata-table td:last-child {
+        padding-left: 0;
+        color: #555;
+        word-wrap: break-word;
+        white-space: normal;
+      }
+      .metadata-popup .metadata-table tr {
+        border-bottom: 1px solid #eee;
+      }
+      .metadata-popup .metadata-table tr:last-child {
+        border-bottom: none;
+      }
+      .metadata-popup .metadata-header {
+        font-weight: bold;
+        margin-bottom: 8px;
+        font-size: 18px;
+        border-bottom: 2px solid #2699D5;
+        padding-bottom: 4px;
+        color: #0066cc;
+      }
+
 
   /* ===== Mobile side panel ===== */
   .mobile-hamburger {
@@ -526,15 +590,22 @@ mainUI <- fluidPage(
   }
 
 
-  /* ===== Footer on medium sized screen ===== */
+  /* ===== Wordmark and Footer on medium sized screen ===== */
 @media (min-width: 769px) and (max-width: 980px) {
 
   /* Navbar wordmark: slightly smaller on medium so it doesn't wrap */
   .navbar-gnwt-brand-line--small {
-    font-size: 15px;
+    font-size: 12px;
   }
   .navbar-gnwt-brand-line--large {
-    font-size: 20px;
+    font-size: 16px;
+  }
+
+  .navbar-gnwt-brand--fr .navbar-gnwt-brand-line--small {
+    font-size: 10px;
+  }
+  .navbar-gnwt-brand--fr .navbar-gnwt-brand-line--large {
+    font-size: 13px;
   }
 
 
@@ -604,6 +675,13 @@ mainUI <- fluidPage(
     }
     .navbar-gnwt-brand-line--large {
       font-size: 12px;
+    }
+
+        .navbar-gnwt-brand--fr .navbar-gnwt-brand-line--small {
+      font-size: 8px;
+    }
+    .navbar-gnwt-brand--fr .navbar-gnwt-brand-line--large {
+      font-size: 10px;
     }
     .navbar-logo-click {
       gap: 6px;
