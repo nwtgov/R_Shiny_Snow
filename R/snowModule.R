@@ -420,7 +420,7 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
         leaflet() %>%
           addTiles() %>%
           setView(lng = -123, lat = 64, zoom = 4.5) %>%
-          addProviderTiles(providers$CartoDB.Positron, group = texts$base_maps$cartodb) %>%
+          carto_tiles(style = "light_all", group = "CartoDB") %>%
           addProviderTiles(providers$Esri.WorldImagery, group = texts$base_maps$esri) %>%
           addPolylines(data = nwt_boundary, weight = 2, color = "#000000", opacity = 0.8, group = texts$basins$nwt_boundary) %>%
           addPolylines(data = mackenzie_basin, weight = 2, color = "#888888", opacity = 0.8, group = texts$basins$mackenzie) %>%
@@ -458,7 +458,7 @@ snowServer <- function(id, first_visits, language, preloaded_data) {
         leaflet() %>%
           addTiles() %>%
           setView(lng = -123, lat = 64, zoom = 4.5) %>%
-          addProviderTiles(providers$CartoDB.Positron, group = texts$base_maps$cartodb) %>%
+          carto_tiles(style = "light_all", group = "CartoDB") %>%
           addProviderTiles(providers$Esri.WorldImagery, group = texts$base_maps$esri) %>%
           addPolylines(data = nwt_boundary, weight = 2, color = "#000000", opacity = 0.8, group = texts$basins$nwt_boundary) %>%
           addPolylines(data = mackenzie_basin, weight = 2, color = "#888888", opacity = 0.8, group = texts$basins$mackenzie) %>%
